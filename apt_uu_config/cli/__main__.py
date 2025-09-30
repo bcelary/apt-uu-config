@@ -41,17 +41,8 @@ def cli(ctx: click.Context, config_dir: str | None) -> None:
     This tool simplifies the configuration of automatic updates
     in Debian/Ubuntu based systems.
     """
-    # Putting all objects in context so that they don't have to be
-    # recreated for each command
-    app_context = AppContext()
 
-    # Override config directory if provided
-    if config_dir is not None:
-        from pathlib import Path
-
-        app_context.app_config.apt_config_dir = Path(config_dir)
-
-    ctx.obj = app_context
+    ctx.obj = AppContext()
 
 
 # Register commands
