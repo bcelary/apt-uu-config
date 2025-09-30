@@ -33,11 +33,40 @@ This document contains development conventions and architectural guidelines spec
 - Mock file system operations to avoid requiring sudo in tests
 - Aim for meaningful coverage, not just high percentages
 
+### Running Tests and Type Checking
+
+**Quick QA check** (runs all checks):
+```bash
+pre-commit run --all-files
+```
+
+**Individual commands** (when you need specific tools):
+
+Option 1: Activate virtual environment (recommended for interactive development):
+```bash
+source .venv/bin/activate
+mypy apt_uu_config
+pytest tests/
+ruff check apt_uu_config
+ruff format apt_uu_config
+deactivate
+```
+
+Option 2: Use `uv run` without activation:
+```bash
+uv run mypy apt_uu_config
+uv run pytest tests/
+uv run ruff check apt_uu_config
+uv run ruff format apt_uu_config
+```
+
+Note: If `uv run` commands fail with "command not found", the venv may have stale paths (e.g., after renaming the project directory). Recreate it with: `rm -rf .venv && uv sync --all-groups`
+
 ### Code Style
 
 - Follow existing code patterns in the project
 - Use `ruff` for formatting and linting (auto-fix enabled)
-- Pre-commit hooks enforce standards automatically
+- Pre-commit hooks enforce all quality checks automatically (ruff, mypy, pytest)
 
 ## Architecture
 
@@ -79,6 +108,8 @@ Unattended-Upgrade::Allowed-Origins {
     "${distro_id}:${distro_codename}-security";
 };
 ```
+
+For comprehensive documentation on all supported pattern formats, see [docs/CONFIGURATION.md](docs/CONFIGURATION.md).
 
 ### Safety Measures
 
@@ -134,5 +165,5 @@ APT configs use variables like `${distro_id}` and `${distro_codename}`:
 
 - **Architecture**: Follow existing patterns in similar modules
 - **APT specifics**: Refer to [Debian UnattendedUpgrades docs](https://wiki.debian.org/UnattendedUpgrades)
-- **Code quality**: If `task qa` passes, you're on the right track
+- **Code quality**: If `pre-commit run --all-files` passes, you're on the right track
 - **Philosophy**: Choose simple, readable code over clever solutions

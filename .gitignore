@@ -63,3 +63,6 @@ __pycache__/
 
 # VS Code
 .vscode/
+
+# Tmp dir
+tmp

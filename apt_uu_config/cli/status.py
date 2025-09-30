@@ -4,7 +4,7 @@ import click
 from rich.console import Console
 from rich.table import Table
 
-from apt_uu_config.apt.config_reader import ConfigReader
+from apt_uu_config.app_context import AppContext
 from apt_uu_config.apt.origins import OriginDetector
 
 
@@ -20,12 +20,12 @@ def status_command(ctx: click.Context) -> None:
     - Which origins have automatic updates enabled
     """
     console = Console()
+    app_context: AppContext = ctx.obj
 
     try:
         # Read current configuration
-        config_reader = ConfigReader()
-        globally_enabled = config_reader.is_globally_enabled()
-        enabled_origins = config_reader.get_enabled_origins()
+        globally_enabled = app_context.config_reader.is_globally_enabled()
+        enabled_origins = app_context.config_reader.get_enabled_origins()
 
         # Get all available origins
         origin_detector = OriginDetector()
@@ -55,9 +55,7 @@ def status_command(ctx: click.Context) -> None:
         for origin in sorted_origins:
             status_text = "ENABLED" if origin.enabled_for_uu else "DISABLED"
             status_style = (
-                "[green]ENABLED[/green]"
-                if origin.enabled_for_uu
-                else "[dim]DISABLED[/dim]"
+                "[green]ENABLED[/green]" if origin.enabled_for_uu else "[dim]DISABLED[/dim]"
             )
 
             table.add_row(origin.origin, origin.suite, status_style)

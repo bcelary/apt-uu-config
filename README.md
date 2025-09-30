@@ -165,6 +165,8 @@ The tool modifies two main APT configuration files:
 
 All modifications create automatic `.bak` backup files before making changes.
 
+For detailed information about configuration pattern formats and advanced usage, see the [Configuration Guide](docs/CONFIGURATION.md).
+
 ## Development
 
 ### Setup

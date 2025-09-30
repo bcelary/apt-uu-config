@@ -1,7 +1,5 @@
 """Tests for Origin model."""
 
-import pytest
-
 from apt_uu_config.models.origin import Origin
 
 

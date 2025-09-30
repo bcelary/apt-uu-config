@@ -16,8 +16,16 @@ class ConfigReader:
     - /etc/apt/apt.conf.d/50unattended-upgrades (origin configuration)
     """
 
-    AUTO_UPGRADES_PATH = Path("/etc/apt/apt.conf.d/20auto-upgrades")
-    UNATTENDED_UPGRADES_PATH = Path("/etc/apt/apt.conf.d/50unattended-upgrades")
+    def __init__(self, config_dir: Path = Path("/etc/apt")) -> None:
+        """
+        Initialize the ConfigReader.
+
+        Args:
+            config_dir: Base directory for APT configuration (default: /etc/apt)
+        """
+        self.config_dir = config_dir
+        self.AUTO_UPGRADES_PATH = config_dir / "apt.conf.d" / "20auto-upgrades"
+        self.UNATTENDED_UPGRADES_PATH = config_dir / "apt.conf.d" / "50unattended-upgrades"
 
     def is_globally_enabled(self) -> bool:
         """
@@ -33,22 +41,17 @@ class ConfigReader:
             content = self.AUTO_UPGRADES_PATH.read_text()
 
             # Look for APT::Periodic::Unattended-Upgrade "1";
-            match = re.search(
-                r'APT::Periodic::Unattended-Upgrade\s+"(\d+)";', content
-            )
+            match = re.search(r'APT::Periodic::Unattended-Upgrade\s+"(\d+)";', content)
             if match:
                 return match.group(1) == "1"
 
             return False
         except PermissionError:
             raise PermissionError(
-                f"Permission denied reading {self.AUTO_UPGRADES_PATH}. "
-                "Try running with sudo."
+                f"Permission denied reading {self.AUTO_UPGRADES_PATH}. " "Try running with sudo."
             )
         except Exception as e:
-            raise RuntimeError(
-                f"Error reading {self.AUTO_UPGRADES_PATH}: {e}"
-            ) from e
+            raise RuntimeError(f"Error reading {self.AUTO_UPGRADES_PATH}: {e}") from e
 
     def get_enabled_origins(self) -> List[Origin]:
         """
@@ -69,9 +72,7 @@ class ConfigReader:
                 "Try running with sudo."
             )
         except Exception as e:
-            raise RuntimeError(
-                f"Error reading {self.UNATTENDED_UPGRADES_PATH}: {e}"
-            ) from e
+            raise RuntimeError(f"Error reading {self.UNATTENDED_UPGRADES_PATH}: {e}") from e
 
     def _parse_origins_from_config(self, content: str) -> List[Origin]:
         """
@@ -92,9 +93,7 @@ class ConfigReader:
 
         # Find all origin/suite patterns
         # Pattern 1: "${distro_id}:${distro_codename}-security"
-        pattern1 = re.finditer(
-            r'"\$\{distro_id\}:\$\{distro_codename\}(-\w+)"', content
-        )
+        pattern1 = re.finditer(r'"\$\{distro_id\}:\$\{distro_codename\}(-\w+)"', content)
         for match in pattern1:
             suite_suffix = match.group(1)
             # This will be resolved at runtime based on actual distro
@@ -112,16 +111,10 @@ class ConfigReader:
         for match in pattern2:
             origin_name = match.group(1)
             suite_name = match.group(2)
-            origins.append(
-                Origin(
-                    origin=origin_name, suite=suite_name, enabled_for_uu=True
-                )
-            )
+            origins.append(Origin(origin=origin_name, suite=suite_name, enabled_for_uu=True))
 
         # Pattern 3: Simple "${distro_id} ${distro_codename}-security"
-        pattern3 = re.finditer(
-            r'"\$\{distro_id\} \$\{distro_codename\}(-\w+)"', content
-        )
+        pattern3 = re.finditer(r'"\$\{distro_id\} \$\{distro_codename\}(-\w+)"', content)
         for match in pattern3:
             suite_suffix = match.group(1)
             origins.append(
@@ -131,6 +124,15 @@ class ConfigReader:
                     enabled_for_uu=True,
                 )
             )
+
+        # Pattern 4: Simple "origin:suite" format (non-variable)
+        # Matches entries like "Brave Software:stable", "Docker:noble"
+        # Negative lookahead (?!\$\{) excludes variable patterns like "${distro_id}:..."
+        pattern4 = re.finditer(r'"(?!\$\{)([^:"]+):([^"]+)"', content)
+        for match in pattern4:
+            origin_name = match.group(1).strip()
+            suite_name = match.group(2).strip()
+            origins.append(Origin(origin=origin_name, suite=suite_name, enabled_for_uu=True))
 
         return origins
 

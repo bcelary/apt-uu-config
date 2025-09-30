@@ -58,14 +58,12 @@ class Origin(BaseModel):
         # Handle origin:suite pattern
         if ":" in pattern:
             origin_pattern, suite_pattern = pattern.split(":", 1)
-            return self._matches_glob(
-                self.origin, origin_pattern
-            ) and self._matches_glob(self.suite, suite_pattern)
+            return self._matches_glob(self.origin, origin_pattern) and self._matches_glob(
+                self.suite, suite_pattern
+            )
 
         # Handle origin-only pattern
-        return self._matches_glob(self.origin, pattern) or self._matches_glob(
-            self.suite, pattern
-        )
+        return self._matches_glob(self.origin, pattern) or self._matches_glob(self.suite, pattern)
 
     def _matches_glob(self, value: str, pattern: str) -> bool:
         """

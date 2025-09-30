@@ -3,7 +3,7 @@
 import click
 from rich.console import Console
 
-from apt_uu_config.apt.config_writer import ConfigWriter
+from apt_uu_config.app_context import AppContext
 
 
 @click.command(name="disable")
@@ -16,10 +16,10 @@ def disable_command(ctx: click.Context) -> None:
     automatic package updates.
     """
     console = Console()
+    app_context: AppContext = ctx.obj
 
     try:
-        config_writer = ConfigWriter()
-        config_writer.set_globally_enabled(False)
+        app_context.config_writer.set_globally_enabled(False)
 
         console.print(
             "[yellow]✓[/yellow] Unattended upgrades disabled successfully",
@@ -28,9 +28,7 @@ def disable_command(ctx: click.Context) -> None:
         console.print(
             "\n[dim]Configuration file updated: /etc/apt/apt.conf.d/20auto-upgrades[/dim]"
         )
-        console.print(
-            "[dim]Backup created: /etc/apt/apt.conf.d/20auto-upgrades.bak[/dim]\n"
-        )
+        console.print("[dim]Backup created: /etc/apt/apt.conf.d/20auto-upgrades.bak[/dim]\n")
 
     except PermissionError as e:
         console.print(f"[red]Error:[/red] {e}", style="bold")

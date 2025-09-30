@@ -38,9 +38,7 @@ class SourcesParser:
 
         return sources
 
-    def _parse_sources_file(
-        self, file_path: Path
-    ) -> List[Tuple[str, str, List[str]]]:
+    def _parse_sources_file(self, file_path: Path) -> List[Tuple[str, str, List[str]]]:
         """
         Parse a single sources.list file.
 
@@ -76,9 +74,7 @@ class SourcesParser:
                     sources.append((url, distribution, components))
 
         except PermissionError:
-            raise PermissionError(
-                f"Permission denied reading {file_path}. Try running with sudo."
-            )
+            raise PermissionError(f"Permission denied reading {file_path}. Try running with sudo.")
         except Exception:
             # Log warning but don't fail - some files might be malformed
             pass

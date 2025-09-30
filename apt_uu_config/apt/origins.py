@@ -43,9 +43,7 @@ class OriginDetector:
                 key = f"{origin.origin}:{origin.suite}"
                 if key not in origins_dict:
                     # Check if this origin is in the enabled list
-                    origin.enabled_for_uu = self._is_origin_enabled(
-                        origin, enabled_origins
-                    )
+                    origin.enabled_for_uu = self._is_origin_enabled(origin, enabled_origins)
                     origins_dict[key] = origin
 
         except (subprocess.CalledProcessError, FileNotFoundError):
@@ -54,9 +52,7 @@ class OriginDetector:
             for origin in origins_from_files:
                 key = f"{origin.origin}:{origin.suite}"
                 if key not in origins_dict:
-                    origin.enabled_for_uu = self._is_origin_enabled(
-                        origin, enabled_origins
-                    )
+                    origin.enabled_for_uu = self._is_origin_enabled(origin, enabled_origins)
                     origins_dict[key] = origin
 
         return list(origins_dict.values())
@@ -175,9 +171,7 @@ class OriginDetector:
 
         return None
 
-    def _is_origin_enabled(
-        self, origin: Origin, enabled_origins: List[Origin]
-    ) -> bool:
+    def _is_origin_enabled(self, origin: Origin, enabled_origins: List[Origin]) -> bool:
         """
         Check if an origin is in the enabled list.
 
@@ -190,9 +184,7 @@ class OriginDetector:
         """
         for enabled in enabled_origins:
             # Handle variable substitution patterns
-            if enabled.origin == "${distro_id}" or enabled.suite.startswith(
-                "${distro_codename}"
-            ):
+            if enabled.origin == "${distro_id}" or enabled.suite.startswith("${distro_codename}"):
                 # Try to match against common patterns
                 if self._matches_distro_pattern(origin, enabled):
                     return True
@@ -205,9 +197,7 @@ class OriginDetector:
 
         return False
 
-    def _matches_distro_pattern(
-        self, origin: Origin, pattern: Origin
-    ) -> bool:
+    def _matches_distro_pattern(self, origin: Origin, pattern: Origin) -> bool:
         """
         Check if an origin matches a distro pattern like ${distro_codename}-security.
 

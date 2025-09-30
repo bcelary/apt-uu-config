@@ -3,8 +3,7 @@
 import click
 from rich.console import Console
 
-from apt_uu_config.apt.config_reader import ConfigReader
-from apt_uu_config.apt.config_writer import ConfigWriter
+from apt_uu_config.app_context import AppContext
 from apt_uu_config.apt.origins import OriginDetector
 
 
@@ -38,20 +37,18 @@ def origin_enable(ctx: click.Context, pattern: str) -> None:
         sudo apt-unattended-config origin enable "google-chrome"
     """
     console = Console()
+    app_context: AppContext = ctx.obj
 
     try:
         # Read current configuration
-        config_reader = ConfigReader()
-        enabled_origins = config_reader.get_enabled_origins()
+        enabled_origins = app_context.config_reader.get_enabled_origins()
 
         # Get all available origins
         origin_detector = OriginDetector()
         all_origins = origin_detector.get_all_origins(enabled_origins)
 
         # Find origins matching the pattern
-        matching_origins = [
-            origin for origin in all_origins if origin.matches_pattern(pattern)
-        ]
+        matching_origins = [origin for origin in all_origins if origin.matches_pattern(pattern)]
 
         if not matching_origins:
             console.print(
@@ -64,32 +61,23 @@ def origin_enable(ctx: click.Context, pattern: str) -> None:
             ctx.exit(1)
 
         # Enable each matching origin
-        config_writer = ConfigWriter()
         for origin in matching_origins:
             if not origin.enabled_for_uu:
-                config_writer.add_origin(origin)
-                console.print(
-                    f"[green]✓[/green] Enabled: {origin.origin}:{origin.suite}"
-                )
+                app_context.config_writer.add_origin(origin)
+                console.print(f"[green]✓[/green] Enabled: {origin.origin}:{origin.suite}")
             else:
-                console.print(
-                    f"[dim]⊗ Already enabled: {origin.origin}:{origin.suite}[/dim]"
-                )
+                console.print(f"[dim]⊗ Already enabled: {origin.origin}:{origin.suite}[/dim]")
 
         console.print(
             "\n[dim]Configuration file updated: /etc/apt/apt.conf.d/50unattended-upgrades[/dim]"
         )
-        console.print(
-            "[dim]Backup created: /etc/apt/apt.conf.d/50unattended-upgrades.bak[/dim]\n"
-        )
+        console.print("[dim]Backup created: /etc/apt/apt.conf.d/50unattended-upgrades.bak[/dim]\n")
 
     except PermissionError as e:
         console.print(f"[red]Error:[/red] {e}", style="bold")
         ctx.exit(1)
     except Exception as e:
-        console.print(
-            f"[red]Error:[/red] Failed to enable origin: {e}", style="bold"
-        )
+        console.print(f"[red]Error:[/red] Failed to enable origin: {e}", style="bold")
         ctx.exit(1)
 
 
@@ -110,11 +98,11 @@ def origin_disable(ctx: click.Context, pattern: str) -> None:
         sudo apt-unattended-config origin disable "*-backports"
     """
     console = Console()
+    app_context: AppContext = ctx.obj
 
     try:
         # Read current configuration
-        config_reader = ConfigReader()
-        enabled_origins = config_reader.get_enabled_origins()
+        enabled_origins = app_context.config_reader.get_enabled_origins()
 
         # Get all available origins
         origin_detector = OriginDetector()
@@ -138,25 +126,18 @@ def origin_disable(ctx: click.Context, pattern: str) -> None:
             ctx.exit(1)
 
         # Disable each matching origin
-        config_writer = ConfigWriter()
         for origin in matching_origins:
-            config_writer.remove_origin(origin)
-            console.print(
-                f"[yellow]✓[/yellow] Disabled: {origin.origin}:{origin.suite}"
-            )
+            app_context.config_writer.remove_origin(origin)
+            console.print(f"[yellow]✓[/yellow] Disabled: {origin.origin}:{origin.suite}")
 
         console.print(
             "\n[dim]Configuration file updated: /etc/apt/apt.conf.d/50unattended-upgrades[/dim]"
         )
-        console.print(
-            "[dim]Backup created: /etc/apt/apt.conf.d/50unattended-upgrades.bak[/dim]\n"
-        )
+        console.print("[dim]Backup created: /etc/apt/apt.conf.d/50unattended-upgrades.bak[/dim]\n")
 
     except PermissionError as e:
         console.print(f"[red]Error:[/red] {e}", style="bold")
         ctx.exit(1)
     except Exception as e:
-        console.print(
-            f"[red]Error:[/red] Failed to disable origin: {e}", style="bold"
-        )
+        console.print(f"[red]Error:[/red] Failed to disable origin: {e}", style="bold")
         ctx.exit(1)
