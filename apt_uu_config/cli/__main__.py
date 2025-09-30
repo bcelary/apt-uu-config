@@ -16,10 +16,7 @@ import click
 from rich.console import Console
 
 from apt_uu_config.app_context import AppContext
-from apt_uu_config.cli.disable import disable_command
-from apt_uu_config.cli.enable import enable_command
-from apt_uu_config.cli.origin import origin_command
-from apt_uu_config.cli.status import status_command
+from apt_uu_config.cli.status import status
 
 CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"], default_map={"obj": {}})
 
@@ -53,22 +50,12 @@ def cli(ctx: click.Context, config_dir: str | None) -> None:
         from pathlib import Path
 
         app_context.app_config.apt_config_dir = Path(config_dir)
-        # Recreate reader and writer with new config directory
-        app_context.config_reader = app_context.config_reader.__class__(
-            config_dir=app_context.app_config.apt_config_dir
-        )
-        app_context.config_writer = app_context.config_writer.__class__(
-            config_dir=app_context.app_config.apt_config_dir
-        )
 
     ctx.obj = app_context
 
 
 # Register commands
-cli.add_command(status_command)
-cli.add_command(enable_command)
-cli.add_command(disable_command)
-cli.add_command(origin_command)
+cli.add_command(status)
 
 
 if __name__ == "__main__":

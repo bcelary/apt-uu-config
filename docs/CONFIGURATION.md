@@ -310,6 +310,45 @@ Field mapping:
 - `l=Ubuntu` → label
 - `c=main` → component
 
+### Understanding Missing Metadata
+
+**Important**: If a field is missing from `apt-cache policy` output, the repository doesn't provide that metadata in its Release file.
+
+**Example - Tailscale repository**:
+```
+500 https://pkgs.tailscale.com/stable/ubuntu noble/main amd64 Packages
+     release o=Tailscale,n=noble,l=Tailscale,c=main,b=amd64
+     origin pkgs.tailscale.com
+```
+
+Notice: **No `a=` (archive/suite) field!** This means:
+- ✗ Cannot use: `"Tailscale:stable"` (no suite available)
+- ✓ Must use: `"origin=Tailscale,site=pkgs.tailscale.com"` or `"origin=Tailscale,codename=noble"`
+
+**When fields are missing**, use the `site` field as a fallback:
+- The `origin` line (second line above) shows the hostname: `pkgs.tailscale.com`
+- Match by site when standard fields are incomplete: `"site=pkgs.tailscale.com"`
+
+**Why this happens**:
+- Some repositories don't follow Debian package repository standards completely
+- Third-party repos may have minimal or non-standard Release file metadata
+- This is especially common with:
+  - Self-hosted repositories
+  - Build system repositories (OpenSUSE Build Service, PPAs)
+  - Small vendor repositories
+
+**How to handle it**:
+
+1. **Use `apt-uu-config origin suggest`** - automatically detects missing metadata and suggests the best pattern
+2. **Use `Origins-Pattern` section** with multi-field matching:
+   ```
+   Unattended-Upgrade::Origins-Pattern {
+       "origin=Tailscale,site=pkgs.tailscale.com";  # More specific
+       "site=download.opensuse.org";                 # Site-only fallback
+   };
+   ```
+3. **Avoid using simple `"origin:suite"` format** when suite is missing or unclear (empty, ".", or otherwise meaningless)
+
 ## Common Scenarios
 
 ### Scenario 1: Security Updates Only

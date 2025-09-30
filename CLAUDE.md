@@ -93,7 +93,6 @@ Note: If `uv run` commands fail with "command not found", the venv may have stal
 
 - **Global enable/disable**: `/etc/apt/apt.conf.d/20auto-upgrades`
 - **Origin configuration**: `/etc/apt/apt.conf.d/50unattended-upgrades`
-- **Repository sources**: `/etc/apt/sources.list` and `/etc/apt/sources.list.d/*.list`
 - **Repository metadata**: `/var/lib/apt/lists/*_Release`
 
 ### Configuration Format

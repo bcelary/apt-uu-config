@@ -12,7 +12,7 @@ A Python CLI tool for managing unattended upgrades configuration on Debian/Ubunt
 - **Global control**: Enable/disable automatic updates system-wide
 - **Repository-level control**: Configure which repositories get automatic updates (e.g., only security repos)
 - **Pattern matching**: Use wildcards to enable/disable multiple repositories at once
-- **Clear status display**: See all repositories and their automatic update status in a formatted table
+- **Clear status display**: See all repositories and their automatic update status
 - **Safe modifications**: Automatic backups created before modifying configuration files
 - **No manual editing**: Never touch `/etc/apt/apt.conf.d/` files directly again
 
@@ -23,12 +23,20 @@ A Python CLI tool for managing unattended upgrades configuration on Debian/Ubunt
 - Python 3.12 or higher
 - Debian/Ubuntu based system with APT package manager
 - Root/sudo access (required for modifying system configuration)
+- **System package**: `python3-apt` (install with `sudo apt install python3-apt`)
 
 ### From Source
 
 ```sh
+# Install system dependency
+sudo apt install python3-apt
+
+# Clone and install
 git clone https://github.com/bcelary/apt-uu-config.git
 cd apt-uu-config
+
+# Create venv with access to system packages (required for python3-apt)
+uv venv --system-site-packages
 uv sync
 ```
 
@@ -39,122 +47,7 @@ sudo uv run apt-uu-config <command>
 
 ## Usage
 
-### Quick Examples
-
-```sh
-# Check current status and list all repositories
-sudo uv run apt-uu-config status
-
-# Enable unattended upgrades globally
-sudo uv run apt-uu-config enable
-
-# Disable unattended upgrades globally
-sudo uv run apt-uu-config disable
-
-# Enable automatic updates for a specific repository
-sudo uv run apt-uu-config origin enable "google-chrome"
-
-# Disable automatic updates for a repository pattern
-sudo uv run apt-uu-config origin disable "ubuntu:jammy-updates"
-
-# Enable automatic updates for all security repositories
-sudo uv run apt-uu-config origin enable "*-security"
-```
-
-### Command Reference
-
-### `status`
-
-Displays the current configuration status:
-- Global unattended upgrades status (enabled/disabled)
-- All APT repositories and their automatic update status
-
-**Example output:**
-```
-Unattended Upgrades: ✓ ENABLED
-
-Repository Origins:
-┌─────────────────────────┬───────────────────┬──────────┐
-│ Origin                  │ Suite             │ Status   │
-├─────────────────────────┼───────────────────┼──────────┤
-│ Ubuntu                  │ jammy-security    │ ENABLED  │
-│ Ubuntu                  │ jammy-updates     │ DISABLED │
-│ Google LLC              │ stable            │ ENABLED  │
-└─────────────────────────┴───────────────────┴──────────┘
-```
-
-### `enable` / `disable`
-
-Globally enable or disable unattended upgrades system-wide.
-
-Modifies: `/etc/apt/apt.conf.d/20auto-upgrades`
-
-**Examples:**
-```sh
-sudo uv run apt-uu-config enable
-# Output: ✓ Unattended upgrades enabled successfully
-
-sudo uv run apt-uu-config disable
-# Output: ✓ Unattended upgrades disabled successfully
-```
-
-### `origin enable <pattern>` / `origin disable <pattern>`
-
-Enable or disable automatic updates for specific repositories using pattern matching.
-
-Modifies: `/etc/apt/apt.conf.d/50unattended-upgrades`
-
-**Pattern types:**
-- Exact origin: `google-chrome`
-- Origin with suite: `ubuntu:jammy-security`
-- Wildcards: `*-security`, `ubuntu:*`
-
-**Examples:**
-```sh
-# Enable security updates for Ubuntu 22.04
-sudo uv run apt-uu-config origin enable "ubuntu:jammy-security"
-
-# Enable all security repositories
-sudo uv run apt-uu-config origin enable "*-security"
-
-# Disable updates repository
-sudo uv run apt-uu-config origin disable "ubuntu:jammy-updates"
-
-# Enable Chrome repository
-sudo uv run apt-uu-config origin enable "google-chrome"
-```
-
-## Use Cases
-
-### Enable Security Updates Only
-
-```sh
-# Enable unattended upgrades globally
-sudo uv run apt-uu-config enable
-
-# Enable only security repositories
-sudo uv run apt-uu-config origin enable "*-security"
-```
-
-### Add Third-Party Repository Updates
-
-```sh
-# After adding a third-party repository (e.g., Docker, Chrome)
-# Enable automatic updates for it
-sudo uv run apt-uu-config origin enable "google-chrome"
-sudo uv run apt-uu-config origin enable "docker"
-```
-
-### Disable All But Security Updates
-
-```sh
-# Check what's currently enabled
-sudo uv run apt-uu-config status
-
-# Disable non-security repos
-sudo uv run apt-uu-config origin disable "ubuntu:*-updates"
-sudo uv run apt-uu-config origin disable "ubuntu:*-backports"
-```
+> **Note**: CLI commands are currently being rewritten. Documentation will be updated once implementation is complete.
 
 ## How It Works
 
@@ -172,9 +65,15 @@ For detailed information about configuration pattern formats and advanced usage,
 ### Setup
 
 ```sh
+# Install system dependency
+sudo apt install python3-apt
+
 # Clone and install dependencies
 git clone https://github.com/bcelary/apt-uu-config.git
 cd apt-uu-config
+
+# Create venv with system-site-packages (required for python3-apt)
+uv venv --system-site-packages
 uv sync
 
 # Install pre-commit hooks
@@ -200,12 +99,14 @@ task coverage
 ### Project Structure
 
 ```
-apt_unattended_config/
-├── cli/                    # CLI commands (status, enable, disable, origin)
-├── apt/                    # APT config file readers/writers
-├── models/                 # Data models (Origin, UnattendedUpgradesConfig)
+apt_uu_config/
+├── models/                 # Data models (Repository, UUPattern, UUConfig)
+├── cli/                    # CLI commands (to be implemented)
+├── apt/                    # APT config file readers/writers (to be implemented)
 └── config/                 # Application configuration
 ```
+
+See [ARCHITECTURE.md](docs/ARCHITECTURE.md) for detailed design documentation.
 
 ## Contributing
 
@@ -217,6 +118,8 @@ Contributions are welcome! Please:
 4. Ensure all tests and quality checks pass
 5. Submit a pull request
 
+See [CLAUDE.md](CLAUDE.md) for development guidelines when working with AI assistants.
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
@@ -225,5 +128,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - **GitHub:** [https://github.com/bcelary/apt-uu-config](https://github.com/bcelary/apt-uu-config)
 - **Issues:** [https://github.com/bcelary/apt-uu-config/issues](https://github.com/bcelary/apt-uu-config/issues)
-- **Changelog:** [CHANGELOG.md](CHANGELOG.md)
-
