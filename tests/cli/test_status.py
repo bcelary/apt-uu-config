@@ -82,7 +82,7 @@ class TestStatusSourcesCommand:
 
     def test_sources_text_output(self, mock_system_state):
         """Test sources command with default text output."""
-        runner = CliRunner()
+        runner = CliRunner(env={"COLUMNS": "200"})
         result = runner.invoke(status, ["sources"])
 
         assert result.exit_code == 0
@@ -90,6 +90,7 @@ class TestStatusSourcesCommand:
         assert "Ubuntu" in result.output
         assert "noble-security" in result.output
         assert "Brave Software" in result.output
+        assert "Arch" in result.output  # Verify arch column is present
 
     def test_sources_text_verbose(self, mock_system_state):
         """Test sources command with verbose flag."""
@@ -160,6 +161,12 @@ class TestStatusPatternsCommand:
         assert "Detailed Match Listing" in result.output
         assert "Ubuntu:noble-security" in result.output
         assert "Brave Software:stable" in result.output
+        # Verify additional details are shown
+        assert "component=main" in result.output
+        assert "codename=noble" in result.output
+        assert "label=Ubuntu" in result.output
+        assert "arch=amd64" in result.output
+        assert "version=24.04" in result.output
 
     def test_patterns_json_output(self, mock_system_state):
         """Test patterns JSON output contains only pattern config."""

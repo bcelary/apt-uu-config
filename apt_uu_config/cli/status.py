@@ -25,6 +25,7 @@ class RepoDataDict(TypedDict):
     suite: str | None
     site: str | None
     component: str | None
+    architecture: str | None
     enabled: bool
     matched_by: List[str]
 
@@ -132,11 +133,11 @@ def sources(ctx: click.Context, verbose: bool) -> None:
         table.add_column("Site", style="blue")
         table.add_column("Component", style="yellow")
         table.add_column("Codename", style="magenta")
+        table.add_column("Arch", style="white")
 
         # Verbose columns
         if verbose:
             table.add_column("Label", style="white")
-            table.add_column("Arch", style="white")
             table.add_column("Version", style="white")
             table.add_column("Priority", style="white")
             table.add_column("URL", style="dim", overflow="fold")
@@ -148,13 +149,13 @@ def sources(ctx: click.Context, verbose: bool) -> None:
                 repo.site or "",
                 repo.component or "",
                 repo.codename or "",
+                repo.architecture or "",
             ]
 
             if verbose:
                 row.extend(
                     [
                         repo.label or "",
-                        repo.architecture or "",
                         repo.version or "",
                         str(repo.priority),
                         repo.url,
@@ -211,9 +212,24 @@ def patterns(ctx: click.Context, verbose: bool) -> None:
                 )
                 if matched_repos:
                     for repo in matched_repos:
+                        # Main identifier line
                         console.print(
                             f"  • {repo.origin or '?'}:{repo.suite or '?'} ({repo.site or 'no-site'})"
                         )
+                        # Additional details
+                        details = []
+                        if repo.component:
+                            details.append(f"component={repo.component}")
+                        if repo.codename:
+                            details.append(f"codename={repo.codename}")
+                        if repo.label:
+                            details.append(f"label={repo.label}")
+                        if repo.architecture:
+                            details.append(f"arch={repo.architecture}")
+                        if repo.version:
+                            details.append(f"version={repo.version}")
+                        if details:
+                            console.print(f"    [dim]{', '.join(details)}[/dim]")
                 else:
                     console.print("  [dim](no matches)[/dim]")
                 console.print()
@@ -302,6 +318,7 @@ def _show_config_by_repo(
                 "suite": repo.suite,
                 "site": repo.site,
                 "component": repo.component,
+                "architecture": repo.architecture,
                 "enabled": is_enabled,
                 "matched_by": matched_patterns,
             }
@@ -319,6 +336,7 @@ def _show_config_by_repo(
         table.add_column("Repository", style="cyan")
         table.add_column("UU Enabled", style="green")
         table.add_column("Matched By", style="yellow")
+        table.add_column("Arch", style="white")
 
         if verbose:
             table.add_column("Site", style="blue")
@@ -328,7 +346,12 @@ def _show_config_by_repo(
             status_icon = "✓" if data["enabled"] else "✗"
             matched_by = ", ".join(data["matched_by"]) if data["matched_by"] else "[dim]none[/dim]"
 
-            row: List[str] = [data["repository"], status_icon, matched_by]
+            row: List[str] = [
+                data["repository"],
+                status_icon,
+                matched_by,
+                str(data["architecture"] or ""),
+            ]
 
             if verbose:
                 row.extend([str(data["site"] or ""), str(data["component"] or "")])
