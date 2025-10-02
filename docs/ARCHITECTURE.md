@@ -198,59 +198,68 @@ flowchart LR
     style CLI fill:#e8f5e9
 ```
 
-## Data Layer (To Be Implemented)
+## Data Layer
 
-### APT Parsers
+### APT Parsers ✅
 
-- Parse `apt-cache policy` output → `List[Repository]`
-- Extract repository metadata from Release file fields
+- Parse `apt-cache policy` command output → `List[Repository]` ✅
+- Extract repository metadata from release fields (o=, a=, n=, etc.) ✅
+- Distribution info detection via `lsb_release` command ✅
 
-### Configuration Parsers
+### Configuration Readers ✅
 
-- Parse `/etc/apt/apt.conf.d/20auto-upgrades` → `globally_enabled` flag
-- Parse `/etc/apt/apt.conf.d/50unattended-upgrades` → `List[UUPattern]`
-- Handle variable substitution (`${distro_id}`, `${distro_codename}`)
+- Read merged APT configuration via `apt_pkg` library ✅
+- Extract global status (APT::Periodic::Unattended-Upgrade) ✅
+- Extract pattern lists (Unattended-Upgrade::Allowed-Origins/Origins-Pattern) ✅
+- Handle variable substitution (`${distro_id}`, `${distro_codename}`) ✅
+- No direct file parsing - uses APT's merged configuration API ✅
 
-### Configuration Writers
+### Configuration Writers (Planned)
 
 - Write `UUConfig` back to configuration files
 - Create automatic backups before modifications
 - Validate configuration syntax
 
-## CLI Layer (To Be Implemented)
+## CLI Layer
 
-### Commands
+### Implemented Commands
 
-- `status` - Show current configuration and repository states
+- `status` - Show current configuration and repository states ✅
+  - implementation pending...
+
+### Planned Commands
+
 - `enable` / `disable` - Control global UU state
 - `origin enable <pattern>` - Add pattern to config
 - `origin disable <pattern>` - Remove pattern from config
 - `origin suggest <repo>` - Suggest pattern for repository
 
-### Display Logic
-
-- Format repositories in tables
-- Show enabled/disabled status
-- Highlight pattern matches
-
 ## File Structure
 
 ```
 apt_uu_config/
-├── models/
+├── models/                 # ✅ Complete
 │   ├── __init__.py
 │   ├── repository.py       # Repository model
-│   ├── uu_pattern.py       # UUPattern model
-│   └── uu_config.py        # UUConfig model
-├── apt/                    # (to be implemented)
-│   ├── policy_parser.py    # Parse apt-cache policy
-│   └── config_parser.py    # Parse UU config files
-├── cli/                    # (to be implemented)
-│   ├── status.py
-│   ├── enable.py
-│   └── origin.py
-└── config/
-    └── app_config.py
+│   ├── uu_pattern.py       # UUPattern model with matching logic
+│   └── uu_config.py        # UUConfig model with query methods
+├── apt/                    # ✅ Readers complete
+│   ├── __init__.py
+│   ├── policy_parser.py    # Parse apt-cache policy ✅
+│   ├── uu_config_reader.py # Parse UU config files via apt_pkg ✅
+│   └── distro_info.py      # Distribution detection ✅
+├── cli/                    # 🚧 Partial (status only)
+│   ├── __init__.py
+│   ├── __main__.py         # CLI entry point ✅
+│   ├── status.py           # Status command ✅
+│   ├── enable.py           # (planned)
+│   └── origin.py           # (planned)
+├── config/                 # ✅ Complete
+│   ├── __init__.py
+│   └── app_config.py       # Application configuration
+└── logging/                # ✅ Complete
+    ├── __init__.py
+    └── logging.py          # Logger setup
 ```
 
 ## Testing Strategy

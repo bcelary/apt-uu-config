@@ -1,4 +1,3 @@
-from pathlib import Path
 from typing import Literal
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -9,7 +8,6 @@ from apt_uu_config import __app_name__
 class AptUnattendedConfigConfig(BaseSettings):
     app_name: str = __app_name__
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
-    apt_config_dir: Path = Path("/etc/apt")
     # Add more ...
 
     model_config = SettingsConfigDict(

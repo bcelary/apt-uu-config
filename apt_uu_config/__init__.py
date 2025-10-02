@@ -1,1 +1,6 @@
-__app_name__ = "apt-unattended-config"
+__app_name__ = "apt-uu-config"
+__version__ = "0.1.0"
+__author__ = "Bartek Celary"
+__email__ = "bcelary@gmail.com"
+__description__ = "A Python CLI tool for apt unattended upgrades configuration"
+__url__ = "https://github.com/bcelary/apt-uu-config"
