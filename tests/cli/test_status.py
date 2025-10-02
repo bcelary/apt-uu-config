@@ -95,7 +95,7 @@ class TestStatusSourcesCommand:
     def test_sources_text_verbose(self, mock_system_state):
         """Test sources command with verbose flag."""
         runner = CliRunner()
-        result = runner.invoke(status, ["sources", "--verbose"])
+        result = runner.invoke(status, ["--verbose", "sources"])
 
         assert result.exit_code == 0
         assert "Label" in result.output
@@ -155,7 +155,7 @@ class TestStatusPatternsCommand:
     def test_patterns_verbose_shows_details(self, mock_system_state):
         """Test patterns verbose mode shows detailed matches."""
         runner = CliRunner()
-        result = runner.invoke(status, ["patterns", "--verbose"])
+        result = runner.invoke(status, ["--verbose", "patterns"])
 
         assert result.exit_code == 0
         assert "Detailed Match Listing" in result.output
@@ -285,7 +285,7 @@ class TestStatusConfigCommand:
     def test_config_by_pattern_verbose(self, mock_system_state):
         """Test config by-pattern with verbose flag."""
         runner = CliRunner()
-        result = runner.invoke(status, ["config", "--by-pattern", "--verbose"])
+        result = runner.invoke(status, ["--verbose", "config", "--by-pattern"])
 
         assert result.exit_code == 0
         assert "Matched Repositories" in result.output

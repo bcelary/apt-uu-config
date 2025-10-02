@@ -103,21 +103,23 @@ def _handle_errors(func: Callable[..., Any]) -> Callable[..., Any]:
     default="text",
     help="Output format",
 )
+@click.option("--verbose", is_flag=True, help="Show additional details in output")
 @click.pass_context
-def status(ctx: click.Context, output_format: str) -> None:
+def status(ctx: click.Context, output_format: str, verbose: bool) -> None:
     """Show unattended-upgrades configuration and repository status."""
     ctx.ensure_object(dict)
     ctx.obj["format"] = output_format
+    ctx.obj["verbose"] = verbose
 
 
 @status.command()
-@click.option("--verbose", is_flag=True, help="Show additional repository metadata")
 @click.pass_context
 @_handle_errors
-def sources(ctx: click.Context, verbose: bool) -> None:
+def sources(ctx: click.Context) -> None:
     """Show all repositories visible to APT."""
     _, repositories = _load_system_state()
     output_format = ctx.obj["format"]
+    verbose = ctx.obj["verbose"]
 
     if output_format == "json":
         # JSON: Include ALL repository fields
@@ -168,13 +170,13 @@ def sources(ctx: click.Context, verbose: bool) -> None:
 
 
 @status.command()
-@click.option("--verbose", is_flag=True, help="Show detailed list of matched repositories")
 @click.pass_context
 @_handle_errors
-def patterns(ctx: click.Context, verbose: bool) -> None:
+def patterns(ctx: click.Context) -> None:
     """Show configured unattended-upgrades patterns."""
     config, repositories = _load_system_state()
     output_format = ctx.obj["format"]
+    verbose = ctx.obj["verbose"]
 
     if output_format == "json":
         # JSON: Only the patterns themselves (config data)
@@ -255,7 +257,6 @@ def patterns(ctx: click.Context, verbose: bool) -> None:
 @click.option(
     "--disabled-only", is_flag=True, help="Show only disabled repositories (--by-repo only)"
 )
-@click.option("--verbose", is_flag=True, help="Show additional metadata")
 @click.pass_context
 @_handle_errors
 def config(
@@ -263,11 +264,11 @@ def config(
     grouping: str,
     enabled_only: bool,
     disabled_only: bool,
-    verbose: bool,
 ) -> None:
     """Show unattended-upgrades configuration status."""
     uu_config, repositories = _load_system_state()
     output_format = ctx.obj["format"]
+    verbose = ctx.obj["verbose"]
 
     # Show global status header (text only)
     if output_format == "text":
