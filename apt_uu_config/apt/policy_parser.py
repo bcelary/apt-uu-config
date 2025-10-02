@@ -49,10 +49,9 @@ def _parse_policy_output(output: str) -> List[Repository]:
         output: Raw output from apt-cache policy command
 
     Returns:
-        List of unique Repository objects (deduplicated by origin/suite/component/site)
+        List of Repository objects
     """
     repositories: List[Repository] = []
-    seen = set()
     lines = output.split("\n")
     i = 0
 
@@ -64,13 +63,7 @@ def _parse_policy_output(output: str) -> List[Repository]:
         if line.strip() and line[0].isspace() and len(line) > 1 and line.strip()[0].isdigit():
             repo = _parse_repository_entry(line, lines, i)
             if repo:
-                # Deduplicate: apt-cache policy shows separate entries for Packages,
-                # Translations, etc. We only want unique repositories.
-                # Include architecture since different arches can have different packages.
-                key = (repo.origin, repo.suite, repo.component, repo.site, repo.architecture)
-                if key not in seen:
-                    seen.add(key)
-                    repositories.append(repo)
+                repositories.append(repo)
 
         i += 1
 
