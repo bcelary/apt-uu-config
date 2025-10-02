@@ -280,14 +280,14 @@ Unattended-Upgrade::Origins-Pattern {
 
 These fields come from the repository's `Release` file metadata. You can view them with `apt-cache policy`:
 
-| Field | Aliases | Description | Example Values |
-|-------|---------|-------------|----------------|
-| `origin` | `o` | Repository origin/provider | `Ubuntu`, `Debian`, `Google LLC`, `Brave Software` |
-| `suite` | `a`, `archive` | Release suite/archive | `stable`, `noble-security`, `jammy-updates` |
-| `codename` | `n` | Distribution codename | `noble`, `jammy`, `bookworm`, `bullseye` |
-| `label` | `l` | Repository label | `Ubuntu`, `Debian-Security` |
-| `component` | `c` | Repository component | `main`, `universe`, `contrib`, `non-free` |
-| `site` | - | Repository hostname | `pkgs.tailscale.com`, `download.docker.com` |
+| Field       | Aliases | Description                | Example Values                                     |
+|-------------|---------|----------------------------|----------------------------------------------------|
+| `origin`    | `o`     | Repository origin/provider | `Ubuntu`, `Debian`, `Google LLC`, `Brave Software` |
+| `suite`     | `a`     | Release suite/archive      | `stable`, `noble-security`, `jammy-updates`        |
+| `codename`  | `n`     | Distribution codename      | `noble`, `jammy`, `bookworm`, `bullseye`           |
+| `label`     | `l`     | Repository label           | `Ubuntu`, `Debian-Security`                        |
+| `component` | `c`     | Repository component       | `main`, `universe`, `contrib`, `non-free`          |
+| `site`      | -       | Repository hostname        | `pkgs.tailscale.com`, `download.docker.com`        |
 
 ### Viewing Repository Metadata
 
@@ -488,10 +488,10 @@ Unattended-Upgrade::Automatic-Reboot "false";
 
 ### Available Variables
 
-| Variable | Resolves To | Example |
-|----------|-------------|---------|
-| `${distro_id}` | Distribution name | `Ubuntu`, `Debian` |
-| `${distro_codename}` | Release codename | `noble`, `jammy`, `bookworm` |
+| Variable             | Resolves To       | Example                      |
+|----------------------|-------------------|------------------------------|
+| `${distro_id}`       | Distribution name | `Ubuntu`, `Debian`           |
+| `${distro_codename}` | Release codename  | `noble`, `jammy`, `bookworm` |
 
 ### Special Distribution Identifiers
 
