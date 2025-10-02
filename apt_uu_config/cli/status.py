@@ -4,6 +4,7 @@ import functools
 import json
 from typing import Any, Callable, Dict, List, Tuple, TypedDict
 
+import apt_pkg
 import click
 from rich.console import Console
 from rich.table import Table
@@ -39,7 +40,7 @@ class PatternDataDict(TypedDict):
     matched_repos: List[str]
 
 
-def _load_system_state() -> Tuple[UUConfig, List[Repository]]:
+def _load_system_state(primary_arch_only: bool = False) -> Tuple[UUConfig, List[Repository]]:
     """
     Load UU configuration and repository data from the system.
 
@@ -54,6 +55,12 @@ def _load_system_state() -> Tuple[UUConfig, List[Repository]]:
     """
     config = read_uu_config()
     repositories = parse_apt_policy()
+
+    if primary_arch_only:
+        apt_pkg.init_config()
+        primary_arch = apt_pkg.config["APT::Architecture"]
+        repositories = [r for r in repositories if r.architecture == primary_arch]
+
     return config, repositories
 
 
@@ -104,12 +111,18 @@ def _handle_errors(func: Callable[..., Any]) -> Callable[..., Any]:
     help="Output format",
 )
 @click.option("--verbose", is_flag=True, help="Show additional details in output")
+@click.option(
+    "--primary-arch-only",
+    is_flag=True,
+    help="Show only repositories for the primary system architecture",
+)
 @click.pass_context
-def status(ctx: click.Context, output_format: str, verbose: bool) -> None:
+def status(ctx: click.Context, output_format: str, verbose: bool, primary_arch_only: bool) -> None:
     """Show unattended-upgrades configuration and repository status."""
     ctx.ensure_object(dict)
     ctx.obj["format"] = output_format
     ctx.obj["verbose"] = verbose
+    ctx.obj["primary_arch_only"] = primary_arch_only
 
 
 @status.command()
@@ -117,7 +130,7 @@ def status(ctx: click.Context, output_format: str, verbose: bool) -> None:
 @_handle_errors
 def sources(ctx: click.Context) -> None:
     """Show all repositories visible to APT."""
-    _, repositories = _load_system_state()
+    _, repositories = _load_system_state(primary_arch_only=ctx.obj["primary_arch_only"])
     output_format = ctx.obj["format"]
     verbose = ctx.obj["verbose"]
 
@@ -174,7 +187,7 @@ def sources(ctx: click.Context) -> None:
 @_handle_errors
 def patterns(ctx: click.Context) -> None:
     """Show configured unattended-upgrades patterns."""
-    config, repositories = _load_system_state()
+    config, repositories = _load_system_state(primary_arch_only=ctx.obj["primary_arch_only"])
     output_format = ctx.obj["format"]
     verbose = ctx.obj["verbose"]
 
@@ -266,7 +279,7 @@ def config(
     disabled_only: bool,
 ) -> None:
     """Show unattended-upgrades configuration status."""
-    uu_config, repositories = _load_system_state()
+    uu_config, repositories = _load_system_state(primary_arch_only=ctx.obj["primary_arch_only"])
     output_format = ctx.obj["format"]
     verbose = ctx.obj["verbose"]
 

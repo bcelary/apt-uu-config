@@ -50,6 +50,18 @@ def sample_repositories():
             priority=500,
             url="https://brave-browser-apt-release.s3.brave.com stable/main amd64 Packages",
         ),
+        Repository(
+            origin="Ubuntu",
+            suite="noble",
+            codename="noble",
+            site="archive.ubuntu.com",
+            component="main",
+            label="Ubuntu",
+            architecture="i386",
+            version="24.04",
+            priority=500,
+            url="http://archive.ubuntu.com/ubuntu noble/main i386 Packages",
+        ),
     ]
 
 
@@ -75,6 +87,23 @@ def mock_system_state(sample_config, sample_repositories):
     with patch("apt_uu_config.cli.status._load_system_state") as mock:
         mock.return_value = (sample_config, sample_repositories)
         yield mock
+
+
+@pytest.fixture
+def mock_system_state_with_primary_arch_only(sample_config, sample_repositories):
+    """Mock the _load_system_state function with primary arch filtering."""
+
+    def side_effect(primary_arch_only=False):
+        if primary_arch_only:
+            # Simulate filtering to only amd64 repositories
+            filtered_repos = [r for r in sample_repositories if r.architecture == "amd64"]
+            return (sample_config, filtered_repos)
+        return (sample_config, sample_repositories)
+
+    with patch("apt_uu_config.cli.status._load_system_state", side_effect=side_effect) as mock:
+        with patch("apt_pkg.config") as apt_config_mock:
+            apt_config_mock.__getitem__.return_value = "amd64"  # Mock primary arch
+            yield mock
 
 
 class TestStatusSourcesCommand:
@@ -127,6 +156,21 @@ class TestStatusSourcesCommand:
         assert '"component"' in result.output
         assert '"priority"' in result.output
         assert '"url"' in result.output
+
+    def test_sources_primary_arch_only_filters_foreign(
+        self, mock_system_state_with_primary_arch_only
+    ):
+        """Test sources command with --primary-arch-only flag filters out foreign architectures."""
+        runner = CliRunner(env={"COLUMNS": "200"})
+        result = runner.invoke(status, ["--primary-arch-only", "sources"])
+
+        assert result.exit_code == 0
+        # Should show amd64 repos
+        assert "noble-security" in result.output
+        assert "noble-updates" in result.output
+        assert "Brave Software" in result.output
+        # Should NOT show i386 repo
+        assert "i386" not in result.output
 
 
 class TestStatusPatternsCommand:
@@ -199,6 +243,19 @@ class TestStatusPatternsCommand:
 
             assert result.exit_code == 0
             assert "✗" in result.output
+
+    def test_patterns_primary_arch_only_filters_matched_repos(
+        self, mock_system_state_with_primary_arch_only
+    ):
+        """Test patterns command with --primary-arch-only flag shows fewer matches."""
+        runner = CliRunner()
+        result = runner.invoke(status, ["--verbose", "--primary-arch-only", "patterns"])
+
+        assert result.exit_code == 0
+        # Should still show patterns, but with potentially fewer matches
+        assert "Detailed Match Listing" in result.output
+        assert "${distro_id}:${distro_codename}-security" in result.output
+        # The i386 repo would be filtered out, so matches are from amd64 repos
 
 
 class TestStatusConfigCommand:
@@ -311,6 +368,19 @@ class TestStatusConfigCommand:
         assert '"patterns"' in result.output
         assert '"count"' in result.output
         assert '"matched_repos"' in result.output
+
+    def test_config_primary_arch_only_filters_repos(self, mock_system_state_with_primary_arch_only):
+        """Test config command with --primary-arch-only flag filters repos by architecture."""
+        runner = CliRunner()
+        result = runner.invoke(status, ["--primary-arch-only", "config", "--by-repo"])
+
+        assert result.exit_code == 0
+        # Should show only amd64 repos in the configuration status
+        assert "Ubuntu:noble-security" in result.output
+        assert "Ubuntu:noble-updates" in result.output
+        assert "Brave Software:stable" in result.output
+        # Should NOT show i386 repo
+        assert "i386" not in result.output
 
 
 class TestStatusErrorHandling:
