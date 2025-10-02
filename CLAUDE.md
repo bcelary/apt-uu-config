@@ -108,7 +108,7 @@ Unattended-Upgrade::Allowed-Origins {
 };
 ```
 
-For comprehensive documentation on all supported pattern formats, see [docs/CONFIGURATION.md](docs/CONFIGURATION.md).
+For comprehensive documentation on all supported pattern formats, see [docs/APT_GUIDE.md](docs/APT_GUIDE.md).
 
 ### Safety Measures
 

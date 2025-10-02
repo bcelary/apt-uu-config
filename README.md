@@ -8,11 +8,17 @@ A Python CLI tool for managing unattended upgrades configuration on Debian/Ubunt
 
 ### Current Features
 
-- **Clear status display**: See all repositories and their automatic update status
-- **Pattern visualization**: View configured patterns and how many repositories they match
-- **Flexible filtering**: Show only enabled or disabled repositories
-- **Rich formatting**: Color-coded tables with detailed information
-- **Variable expansion**: Shows resolved values for `${distro_id}` and `${distro_codename}`
+- **Three focused status views**:
+  - `sources`: View all APT repositories on your system
+  - `patterns`: See configured unattended-upgrades patterns
+  - `config`: Check which repos are enabled and why
+- **Flexible output formats**:
+  - Rich formatted tables with color (default)
+  - JSON output for scripting and automation
+- **Detailed filtering**: Show only enabled/disabled repositories
+- **Verbose mode**: Show additional metadata when needed
+- **Variable expansion**: Resolves `${distro_id}` and `${distro_codename}`
+- **Smart grouping**: View config by repository or by pattern
 
 ### Planned Features
 
@@ -54,12 +60,68 @@ sudo uv run apt-uu-config <command>
 
 ## Usage
 
-### View Configuration Status
+The `status` command provides three focused views for understanding your unattended-upgrades configuration:
+
+### View All APT Sources
+
+See all repositories visible to APT on your system:
 
 ```bash
-# View current configuration and status
-sudo apt-uu-config status
+# Show all repositories (basic info)
+sudo apt-uu-config status sources
+
+# Show all repository metadata
+sudo apt-uu-config status sources --verbose
+
+# Output as JSON
+sudo apt-uu-config status sources --format json
 ```
+
+### View Configured Patterns
+
+See what patterns are configured in unattended-upgrades:
+
+```bash
+# Show configured patterns and if they match anything
+sudo apt-uu-config status patterns
+
+# Show detailed list of repositories matched by each pattern
+sudo apt-uu-config status patterns --verbose
+
+# Output as JSON (configuration data only)
+sudo apt-uu-config status patterns --format json
+```
+
+### View Configuration Status
+
+See which repositories are enabled for automatic updates and why:
+
+```bash
+# Show which repositories are enabled (grouped by repository)
+sudo apt-uu-config status config
+
+# Group by pattern instead
+sudo apt-uu-config status config --by-pattern
+
+# Show only enabled repositories
+sudo apt-uu-config status config --enabled-only
+
+# Show only disabled repositories
+sudo apt-uu-config status config --disabled-only
+
+# Show additional metadata
+sudo apt-uu-config status config --verbose
+
+# Output as JSON
+sudo apt-uu-config status config --format json
+```
+
+### Global Options
+
+All status commands support the `--format` option:
+
+- `--format text` (default): Rich formatted tables with color
+- `--format json`: Machine-readable JSON output for scripting
 
 > **Note**: Configuration modification commands (enable/disable, add/remove patterns) are planned for future releases. Currently, the tool provides read-only status and reporting.
 

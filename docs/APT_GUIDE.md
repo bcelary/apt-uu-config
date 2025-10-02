@@ -1,6 +1,6 @@
-# Unattended-Upgrades Configuration Guide
+# APT and Unattended-Upgrades Guide
 
-This guide explains how to configure unattended-upgrades origin patterns in `/etc/apt/apt.conf.d/50unattended-upgrades`. Understanding these patterns helps you control exactly which repositories receive automatic updates.
+This guide explains how APT repositories work and how to configure unattended-upgrades patterns in `/etc/apt/apt.conf.d/50unattended-upgrades`. Understanding these concepts helps you control exactly which repositories receive automatic updates.
 
 ## Table of Contents
 
@@ -348,6 +348,50 @@ Notice: **No `a=` (archive/suite) field!** This means:
    };
    ```
 3. **Avoid using simple `"origin:suite"` format** when suite is missing or unclear (empty, ".", or otherwise meaningless)
+
+### Special Package Sources: dpkg/status
+
+When you run `apt-cache policy`, you'll always see an entry like this at the top:
+
+```
+100 /var/lib/dpkg/status
+     release a=now
+```
+
+**What is this?**
+
+This is **not a real repository** - it's a pseudo-repository that represents **currently installed packages** on your system. APT includes it in policy output to show which packages are already installed.
+
+**Key characteristics**:
+- **File**: `/var/lib/dpkg/status` - dpkg's database of installed packages
+- **Priority**: Always 100 (the default for installed packages)
+- **Suite**: `a=now` - a special designation meaning "currently installed"
+- **Origin**: None (null)
+- **Site**: None - it's a local file, not a network repository
+- **Not in sources.list**: This doesn't appear in `/etc/apt/sources.list*` because it's not a repository you configure
+
+**Will unattended-upgrades update from it?**
+
+**No.** Unattended-upgrades only updates packages from actual repositories (network sources). The dpkg/status entry:
+- Has no origin to match against patterns
+- Represents packages you already have, not sources of updates
+- Is purely informational for APT's priority system
+
+**Why does APT show it?**
+
+APT uses this to:
+1. Track which package versions are currently installed
+2. Calculate upgrade paths and dependency resolution
+3. Assign the standard priority (100) to installed packages
+
+**Should you see it in apt-uu-config output?**
+
+Yes - the tool shows it because:
+- It appears in `apt-cache policy` output (we show what APT shows)
+- It helps you understand the complete APT package source picture
+- It's harmless - it will never match any unattended-upgrades patterns
+
+When viewing `apt-uu-config status sources`, you'll see this entry. You can safely ignore it when configuring unattended-upgrades patterns.
 
 ## Common Scenarios
 

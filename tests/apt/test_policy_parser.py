@@ -137,6 +137,38 @@ def test_parse_apt_policy_skips_dpkg_status() -> None:
         assert isinstance(repos, list)
 
 
+def test_parse_apt_policy_dpkg_status_does_not_steal_next_origin() -> None:
+    """Test that dpkg/status doesn't incorrectly use the next entry's origin."""
+    with patch("subprocess.run") as mock_run:
+        mock_result = MagicMock()
+        # This is the exact pattern from the bug report
+        mock_result.stdout = """ 100 /var/lib/dpkg/status
+     release a=now
+ 500 https://packages.microsoft.com/repos/code stable/main amd64 Packages
+     release o=code stable,a=stable,n=stable,l=code stable,c=main,b=amd64
+     origin packages.microsoft.com
+"""
+        mock_result.returncode = 0
+        mock_run.return_value = mock_result
+
+        repos = parse_apt_policy()
+
+        # Should have 2 repos
+        assert len(repos) == 2
+
+        # Find dpkg status entry
+        dpkg_status = next((r for r in repos if r.url == "/var/lib/dpkg/status"), None)
+        assert dpkg_status is not None
+        assert dpkg_status.suite == "now"
+        # The bug was that site was set to "packages.microsoft.com" incorrectly
+        assert dpkg_status.site is None
+
+        # Find Microsoft repo
+        ms_repo = next((r for r in repos if r.origin == "code stable"), None)
+        assert ms_repo is not None
+        assert ms_repo.site == "packages.microsoft.com"
+
+
 def test_parse_apt_policy_malformed_priority() -> None:
     """Test handling of malformed priority values."""
     with patch("subprocess.run") as mock_run:

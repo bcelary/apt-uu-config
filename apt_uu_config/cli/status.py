@@ -57,8 +57,10 @@ def _load_system_state() -> Tuple[UUConfig, List[Repository]]:
 
 
 def _output_json(data: Dict[str, Any]) -> None:
-    """Output data as formatted JSON."""
-    console.print(json.dumps(data, indent=2))
+    """Output data as formatted JSON without any color formatting."""
+    # Use plain print() instead of Rich console to avoid ANSI color codes
+    # This ensures clean output when piping to files or other tools
+    print(json.dumps(data, indent=2))  # noqa: T201 `print` is intentional
 
 
 def _output_table(table: Table) -> None:

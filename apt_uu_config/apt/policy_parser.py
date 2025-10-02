@@ -66,7 +66,8 @@ def _parse_policy_output(output: str) -> List[Repository]:
             if repo:
                 # Deduplicate: apt-cache policy shows separate entries for Packages,
                 # Translations, etc. We only want unique repositories.
-                key = (repo.origin, repo.suite, repo.component, repo.site)
+                # Include architecture since different arches can have different packages.
+                key = (repo.origin, repo.suite, repo.component, repo.site, repo.architecture)
                 if key not in seen:
                     seen.add(key)
                     repositories.append(repo)
@@ -120,6 +121,9 @@ def _parse_repository_entry(
     release_data = {}
     for i in range(start_index + 1, min(start_index + 5, len(all_lines))):
         line = all_lines[i].strip()
+        # Stop if we hit the next repository entry (starts with digit)
+        if line and line[0].isdigit():
+            break
         if line.startswith("release "):
             release_data = _parse_release_line(line)
             break
@@ -129,6 +133,9 @@ def _parse_repository_entry(
     if not site:
         for i in range(start_index + 1, min(start_index + 5, len(all_lines))):
             line = all_lines[i].strip()
+            # Stop if we hit the next repository entry (starts with digit)
+            if line and line[0].isdigit():
+                break
             if line.startswith("origin "):
                 site = line.split(maxsplit=1)[1] if len(line.split()) > 1 else None
                 break
