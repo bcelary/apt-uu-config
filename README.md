@@ -118,10 +118,28 @@ sudo apt-uu-config status config --format json
 
 ### Global Options
 
-All status commands support the `--format` option:
+The main `status` command supports options that apply to all subcommands:
 
-- `--format text` (default): Rich formatted tables with color
-- `--format json`: Machine-readable JSON output for scripting
+- `--format [text|json]`: Output format
+  - `text` (default): Rich formatted tables with color
+  - `json`: Machine-readable JSON output for scripting
+- `--verbose`: Show additional details in output
+- `--primary-arch-only`: Show only repositories for the primary system architecture
+  - Filters out repositories with foreign architectures
+  - Useful on multi-arch systems where you only want to see primary arch packages
+
+Examples:
+
+```bash
+# Apply to specific subcommand
+sudo apt-uu-config status --primary-arch-only sources
+
+# Combine with JSON output
+sudo apt-uu-config status --format json --primary-arch-only config
+
+# Use verbose mode with patterns
+sudo apt-uu-config status --verbose patterns
+```
 
 > **Note**: Configuration modification commands (enable/disable, add/remove patterns) are planned for future releases. Currently, the tool provides read-only status and reporting.
 
