@@ -93,7 +93,8 @@ def _parse_repository_entry(
     """
     # Parse first line: priority and URL
     # Example: " 500 http://archive.ubuntu.com/ubuntu noble/main amd64 Packages"
-    parts = entry_line.strip().split(maxsplit=1)
+    # Format: <priority> <url> <dist>/<component> <arch> <type>
+    parts = entry_line.strip().split()
     if len(parts) < 2:
         return None
 
@@ -102,6 +103,7 @@ def _parse_repository_entry(
     except ValueError:
         return None
 
+    # URL is the second element (index 1), not everything after priority
     url = parts[1]
 
     # Extract site from URL

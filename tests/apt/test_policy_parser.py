@@ -16,6 +16,9 @@ SAMPLE_POLICY_OUTPUT = """Package files:
  500 https://packages.microsoft.com/repos/code stable/main amd64 Packages
      release o=code stable,a=stable,n=stable,l=code stable,c=main,b=amd64
      origin packages.microsoft.com
+ 500 https://dl.google.com/linux/chrome/deb stable/main amd64 Packages
+     release o=Google LLC,a=stable,n=stable,l=Google,c=main,b=amd64
+     origin dl.google.com
  100 mirror://mirrors.ubuntu.com/mirrors.txt noble-backports/universe amd64 Packages
      release v=24.04,o=Ubuntu,a=noble-backports,n=noble,l=Ubuntu,c=universe,b=amd64
      origin mirrors.ubuntu.com
@@ -33,7 +36,7 @@ def test_parse_apt_policy_success() -> None:
 
         repos = parse_apt_policy()
 
-        assert len(repos) >= 3
+        assert len(repos) >= 4
         assert mock_run.call_count == 1
 
         # Check Ubuntu security repo
@@ -49,6 +52,13 @@ def test_parse_apt_policy_success() -> None:
         assert ubuntu_security.site == "security.ubuntu.com"
         assert ubuntu_security.version == "24.04"
         assert ubuntu_security.architecture == "amd64"
+        assert ubuntu_security.url == "https://security.ubuntu.com/ubuntu"
+
+        # Check Google Chrome repo (tests URL parsing bug)
+        chrome_repo = next((r for r in repos if r.origin == "Google LLC"), None)
+        assert chrome_repo is not None
+        assert chrome_repo.url == "https://dl.google.com/linux/chrome/deb"
+        assert chrome_repo.site == "dl.google.com"
 
 
 def test_parse_apt_policy_microsoft_repo() -> None:
@@ -67,6 +77,7 @@ def test_parse_apt_policy_microsoft_repo() -> None:
         assert code_repo.priority == 500
         assert code_repo.suite == "stable"
         assert code_repo.site == "packages.microsoft.com"
+        assert code_repo.url == "https://packages.microsoft.com/repos/code"
 
 
 def test_parse_apt_policy_mirror_url() -> None:
@@ -84,6 +95,7 @@ def test_parse_apt_policy_mirror_url() -> None:
         assert backports is not None
         assert backports.priority == 100
         assert backports.site == "mirrors.ubuntu.com"
+        assert backports.url == "mirror://mirrors.ubuntu.com/mirrors.txt"
 
 
 def test_parse_apt_policy_command_not_found() -> None:
