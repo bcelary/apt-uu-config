@@ -54,7 +54,7 @@ def _load_system_state(primary_arch_only: bool = False) -> Tuple[UUConfig, List[
     if primary_arch_only:
         apt_pkg.init_config()
         primary_arch = apt_pkg.config["APT::Architecture"]
-        # `None`: simplified repository layout without architecture specification, keeping in the results
+        # Include repos for primary arch, repos with no arch specified, and universal "all" arch packages
         repositories = [r for r in repositories if r.architecture in [primary_arch, None, "all"]]
 
     return config, repositories
@@ -72,7 +72,7 @@ def _output_table(table: Table) -> None:
     console.print(table)
 
 
-def _column_kwargs(no_truncate: bool) -> Dict[str, Any]:
+def _get_column_overflow_kwargs(no_truncate: bool) -> Dict[str, Any]:
     """
     Get column overflow kwargs based on truncation mode.
 
@@ -114,6 +114,29 @@ def _handle_errors(func: Callable[..., Any]) -> Callable[..., Any]:
     return wrapper
 
 
+def common_options(f: Callable[..., Any]) -> Callable[..., Any]:
+    """Decorator for common CLI options shared between repos and patterns commands."""
+    f = click.option(
+        "--format",
+        "output_format",
+        type=click.Choice(["text", "json"]),
+        default="text",
+        help="Output format",
+    )(f)
+    f = click.option("--verbose", is_flag=True, help="Show additional details in output")(f)
+    f = click.option(
+        "--primary-arch-only",
+        is_flag=True,
+        help="Show only repositories for the primary system architecture",
+    )(f)
+    f = click.option(
+        "--no-truncate",
+        is_flag=True,
+        help="Disable text truncation in tables, show full text with wrapping",
+    )(f)
+    return f
+
+
 @click.group()
 def show() -> None:
     """Show unattended-upgrades configuration and repository information."""
@@ -121,24 +144,7 @@ def show() -> None:
 
 
 @show.command()
-@click.option(
-    "--format",
-    "output_format",
-    type=click.Choice(["text", "json"]),
-    default="text",
-    help="Output format",
-)
-@click.option("--verbose", is_flag=True, help="Show additional details in output")
-@click.option(
-    "--primary-arch-only",
-    is_flag=True,
-    help="Show only repositories for the primary system architecture",
-)
-@click.option(
-    "--no-truncate",
-    is_flag=True,
-    help="Disable text truncation in tables, show full text with wrapping",
-)
+@_handle_errors
 @click.option(
     "--enabled-only",
     is_flag=True,
@@ -149,7 +155,7 @@ def show() -> None:
     is_flag=True,
     help="Show only repositories disabled for unattended-upgrades",
 )
-@_handle_errors
+@common_options
 def repos(
     output_format: str,
     verbose: bool,
@@ -219,19 +225,33 @@ def repos(
 
         # Build table
         table = Table(title="Repositories")
-        table.add_column("Origin", style="cyan", max_width=15, **_column_kwargs(no_truncate))
-        table.add_column("Suite", style="blue", **_column_kwargs(no_truncate))
-        table.add_column("Site", style="white", max_width=22, **_column_kwargs(no_truncate))
-        table.add_column("Component", style="yellow", **_column_kwargs(no_truncate))
-        table.add_column("Codename", style="magenta", **_column_kwargs(no_truncate))
-        table.add_column("Arch", style="white", min_width=5, **_column_kwargs(no_truncate))
+        table.add_column(
+            "Origin", style="cyan", max_width=15, **_get_column_overflow_kwargs(no_truncate)
+        )
+        table.add_column("Suite", style="blue", **_get_column_overflow_kwargs(no_truncate))
+        table.add_column(
+            "Site", style="white", max_width=22, **_get_column_overflow_kwargs(no_truncate)
+        )
+        table.add_column("Component", style="yellow", **_get_column_overflow_kwargs(no_truncate))
+        table.add_column("Codename", style="magenta", **_get_column_overflow_kwargs(no_truncate))
+        table.add_column(
+            "Arch", style="white", min_width=5, **_get_column_overflow_kwargs(no_truncate)
+        )
 
         if verbose:
-            table.add_column("Label", style="white", max_width=15, **_column_kwargs(no_truncate))
-            table.add_column("Version", style="white", **_column_kwargs(no_truncate))
-            table.add_column("Priority", style="white", min_width=3, **_column_kwargs(no_truncate))
-            table.add_column("URL", style="dim", max_width=25, **_column_kwargs(no_truncate))
-            table.add_column("UU Pattern Match", max_width=40, **_column_kwargs(no_truncate))
+            table.add_column(
+                "Label", style="white", max_width=15, **_get_column_overflow_kwargs(no_truncate)
+            )
+            table.add_column("Version", style="white", **_get_column_overflow_kwargs(no_truncate))
+            table.add_column(
+                "Priority", style="white", min_width=3, **_get_column_overflow_kwargs(no_truncate)
+            )
+            table.add_column(
+                "URL", style="dim", max_width=25, **_get_column_overflow_kwargs(no_truncate)
+            )
+            table.add_column(
+                "UU Pattern Match", max_width=40, **_get_column_overflow_kwargs(no_truncate)
+            )
         else:
             table.add_column("UU", min_width=3)
 
@@ -272,25 +292,8 @@ def repos(
 
 
 @show.command()
-@click.option(
-    "--format",
-    "output_format",
-    type=click.Choice(["text", "json"]),
-    default="text",
-    help="Output format",
-)
-@click.option("--verbose", is_flag=True, help="Show additional details in output")
-@click.option(
-    "--primary-arch-only",
-    is_flag=True,
-    help="Show only repositories for the primary system architecture",
-)
-@click.option(
-    "--no-truncate",
-    is_flag=True,
-    help="Disable text truncation in tables, show full text with wrapping",
-)
 @_handle_errors
+@common_options
 def patterns(output_format: str, verbose: bool, primary_arch_only: bool, no_truncate: bool) -> None:
     """Show configured unattended-upgrades patterns and their matches."""
     config, repositories = _load_system_state(primary_arch_only=primary_arch_only)
