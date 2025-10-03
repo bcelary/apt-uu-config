@@ -274,8 +274,7 @@ class TestShowPatternsCommand:
         # Verify format_full() shows component and arch in main identifier
         assert "Ubuntu:noble-security/main" in result.output
         assert "[amd64]" in result.output
-        # Verify additional details are shown in details section (including suite)
-        assert "suite=" in result.output
+        # Verify additional details are shown in details section
         assert "codename=noble" in result.output
         assert "label=Ubuntu" in result.output
         assert "version=24.04" in result.output

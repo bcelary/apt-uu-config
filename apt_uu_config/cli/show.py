@@ -348,11 +348,7 @@ def patterns(output_format: str, verbose: bool, primary_arch_only: bool, no_trun
                     if verbose:
                         details = repo.format_details(color=True)
                         if details:
-                            # Also include suite since it's not in format_details
-                            suite_detail = f"suite=[blue]{repo.suite}[/blue]" if repo.suite else ""
-                            if suite_detail:
-                                details = f"{suite_detail}, {details}" if details else suite_detail
-                            console.print(f"    [dim]{details}[/dim]", highlight=False)
+                            console.print(f"    {details}", highlight=False)
             else:
                 console.print("  [dim](no matches)[/dim]")
             console.print()

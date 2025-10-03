@@ -192,8 +192,8 @@ def test_format_full_same_origin_site():
         url="https://pkgs.tailscale.com/stable/ubuntu stable/main amd64 Packages",
     )
 
-    # When origin == site, site should be omitted
-    assert repo.format_full() == "pkgs.tailscale.com:stable/main [amd64]"
+    # Site should always be shown
+    assert repo.format_full() == "pkgs.tailscale.com:stable/main [amd64] @pkgs.tailscale.com"
 
 
 def test_format_full_long_origin_truncated():

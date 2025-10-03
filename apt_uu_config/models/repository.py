@@ -132,8 +132,8 @@ class Repository(BaseModel):
 
         Returns format: origin:suite/component [arch] @site
         - Architecture always shown (uses ? if not specified)
-        - Site shown only when different from origin
-        Example: "Ubuntu:noble-security/main [amd64]"
+        - Site always shown when available
+        Example: "Ubuntu:noble-security/main [amd64] @archive.ubuntu.com"
         Example (long origin): "obs://build.op...Ubuntu_24.04:?/main [amd64] @download.opensuse.org"
         Example (no arch): "Ubuntu:noble [?] @archive.ubuntu.com"
         """
@@ -163,8 +163,7 @@ class Repository(BaseModel):
             arch = f"[white]{arch}[/white]"
         parts.append(f" [{arch}]")
 
-        if self.site and self.site != self.origin:
-            # Add site if it's different from origin (often more recognizable)
+        if self.site:
             parts.append(f" @{self.site}")
 
         return "".join(parts)
@@ -191,9 +190,15 @@ class Repository(BaseModel):
             details.append(f"codename={codename}")
 
         if self.label:
-            details.append(f"label={self.label}")
+            label = self.label
+            if color:
+                label = f"[white]{label}[/white]"
+            details.append(f"label={label}")
 
         if self.version:
-            details.append(f"version={self.version}")
+            version = self.version
+            if color:
+                version = f"[white]{version}[/white]"
+            details.append(f"version={version}")
 
         return ", ".join(details)
