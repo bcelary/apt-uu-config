@@ -43,6 +43,7 @@ dev = [
 
 [tool.uv]
 required-version = ">=0.8.4"
+default-groups = []
 
 [tool.commitizen] # https://commitizen-tools.github.io/commitizen/config/
 bump_message = "bump(release): v$current_version → v$new_version"

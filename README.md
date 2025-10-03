@@ -89,7 +89,7 @@ sudo apt install python3-apt lsb-release
 git clone https://github.com/bcelary/apt-uu-config.git
 cd apt-uu-config
 uv venv --system-site-packages
-uv sync
+uv sync --group dev
 uv run pre-commit install
 
 # Run tests and checks
