@@ -17,6 +17,7 @@ from rich.console import Console
 
 from apt_uu_config import __version__
 from apt_uu_config.app_context import AppContext
+from apt_uu_config.cli.config import config
 from apt_uu_config.cli.show import show
 
 CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"], default_map={"obj": {}})
@@ -40,6 +41,7 @@ def cli(ctx: click.Context) -> None:
 
 
 # Register commands
+cli.add_command(config)
 cli.add_command(show)
 
 

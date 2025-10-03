@@ -8,6 +8,7 @@ import re
 from typing import ClassVar, Literal, Optional
 
 from pydantic import BaseModel, Field
+from rich.markup import escape
 
 from apt_uu_config.models.repository import Repository
 
@@ -204,44 +205,77 @@ class UUPattern(BaseModel):
         return bool(re.match(f"^{regex_pattern}$", field_value, re.IGNORECASE))
 
     @classmethod
-    def suggest_for_repository(cls, repo: Repository) -> "UUPattern":
+    def suggest_for_repository(
+        cls,
+        repo: Repository,
+        distro_id: Optional[str] = None,
+        distro_codename: Optional[str] = None,
+    ) -> "UUPattern":
         """
         Suggest the best unattended-upgrades pattern for a repository.
 
         Uses a priority system:
-        1. Simple "origin:suite" format (if both exist and suite is meaningful)
-        2. "origin=X,codename=Y" (if origin exists but no suite)
-        3. "origin=X,site=Y" (if origin exists and site available)
-        4. "site=hostname" (fallback for minimal metadata)
+        1. Variable-based patterns (if origin matches distro and suite follows pattern)
+        2. Simple "origin:suite" format (if both exist and suite is meaningful)
+        3. "origin=X,codename=Y" (if origin exists but no suite)
+        4. "origin=X,site=Y" (if origin exists and site available)
+        5. "site=hostname" (fallback for minimal metadata)
 
         Args:
             repo: The repository to generate a pattern for
+            distro_id: Distribution ID (e.g., "Ubuntu", "Debian")
+            distro_codename: Distribution codename (e.g., "noble", "jammy")
 
         Returns:
             Suggested UUPattern with explanation in pattern_string
         """
-        # Priority 1: Simple origin:suite format
+        # Priority 1: Variable-based patterns for distribution repos
+        if distro_id and distro_codename and repo.origin and repo.suite:
+            origin_lower = repo.origin.lower()
+            suite_lower = repo.suite.lower()
+            distro_id_lower = distro_id.lower()
+            distro_codename_lower = distro_codename.lower()
+
+            # Check if origin starts with distro_id and suite contains codename
+            if origin_lower.startswith(distro_id_lower) and distro_codename_lower in suite_lower:
+                # Extract the suffix from origin (e.g., "" for "Ubuntu", "ESMApps" for "UbuntuESMApps")
+                origin_suffix = repo.origin[len(distro_id) :]
+
+                # Replace codename in suite with variable (preserve original case positions)
+                codename_pos = suite_lower.find(distro_codename_lower)
+                suite_with_var = (
+                    repo.suite[:codename_pos]
+                    + "${distro_codename}"
+                    + repo.suite[codename_pos + len(distro_codename) :]
+                )
+
+                return cls(
+                    pattern_string=f"${{distro_id}}{origin_suffix}:{suite_with_var}",
+                    section="Allowed-Origins",
+                )
+
+        # Priority 2: Simple origin:suite format
         if repo.origin and repo.suite and repo.suite.strip() and repo.suite != ".":
             return cls(
                 pattern_string=f"{repo.origin}:{repo.suite}",
                 section="Allowed-Origins",
             )
 
-        # Priority 2: Origin + codename (when suite is missing/unclear)
+        # Priority 3: Origin + codename (when suite is missing/unclear)
         if repo.origin and repo.codename:
             return cls(
                 pattern_string=f"origin={repo.origin},codename={repo.codename}",
                 section="Origins-Pattern",
             )
 
-        # Priority 3: Origin + site (provides specificity)
+        # Priority 4: Origin + site (provides specificity)
         if repo.origin and repo.site:
             return cls(
                 pattern_string=f"origin={repo.origin},site={repo.site}",
                 section="Origins-Pattern",
             )
 
-        # Priority 4: Site only (fallback for minimal metadata)
+        # Priority 5: Site only (fallback for minimal metadata)
         if repo.site:
             return cls(
                 pattern_string=f"site={repo.site}",
@@ -268,8 +302,14 @@ class UUPattern(BaseModel):
         pattern_str: str = self.pattern_string
 
         if color:
-            section_str = f"[{self.SECTION_STYLE}]{section_str}[/{self.SECTION_STYLE}]"
-            pattern_str = f"[{self.PATTERN_STYLE}]{pattern_str}[/{self.PATTERN_STYLE}]"
+            # Escape any brackets in content before applying markup
+            section_str = escape(section_str)
+            pattern_str = escape(pattern_str)
+
+            if self.SECTION_STYLE:
+                section_str = f"[{self.SECTION_STYLE}]{section_str}[/{self.SECTION_STYLE}]"
+            if self.PATTERN_STYLE:
+                pattern_str = f"[{self.PATTERN_STYLE}]{pattern_str}[/{self.PATTERN_STYLE}]"
 
         return f"{section_str}: {pattern_str}"
 

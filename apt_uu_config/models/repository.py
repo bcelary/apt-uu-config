@@ -7,6 +7,7 @@ on the system. It contains no business logic about unattended-upgrades.
 from typing import ClassVar, Optional
 
 from pydantic import BaseModel, Field
+from rich.markup import escape
 
 
 class Repository(BaseModel):
@@ -33,7 +34,7 @@ class Repository(BaseModel):
     ORIGIN_STYLE: ClassVar[str] = "cyan"
     SUITE_STYLE: ClassVar[str] = "blue"
     COMP_STYLE: ClassVar[str] = "yellow"
-    ARCH_STYLE: ClassVar[str] = "white on bright_black"
+    ARCH_STYLE: ClassVar[str] = ""  # "white on bright_black"
     SITE_STYLE: ClassVar[str] = "dim white on black"
     CODENAME_STYLE: ClassVar[str] = "magenta"
     LABEL_STYLE: ClassVar[str] = "white on bright_black"
@@ -117,21 +118,34 @@ class Repository(BaseModel):
         suite = self.suite or "?"
 
         if color:
-            origin = f"[{self.ORIGIN_STYLE}]{origin}[/{self.ORIGIN_STYLE}]"
-            suite = f"[{self.SUITE_STYLE}]{suite}[/{self.SUITE_STYLE}]"
+            # Escape brackets in content
+            origin = escape(origin)
+            suite = escape(suite)
+
+            # Apply styles
+            if self.ORIGIN_STYLE:
+                origin = f"[{self.ORIGIN_STYLE}]{origin}[/{self.ORIGIN_STYLE}]"
+            if self.SUITE_STYLE:
+                suite = f"[{self.SUITE_STYLE}]{suite}[/{self.SUITE_STYLE}]"
 
         parts = [f"{origin}:{suite}"]
 
         if self.component:
             component = self.component
             if color:
-                component = f"[{self.COMP_STYLE}]{component}[/{self.COMP_STYLE}]"
+                component = escape(component)
+                if self.COMP_STYLE:
+                    component = f"[{self.COMP_STYLE}]{component}[/{self.COMP_STYLE}]"
             parts.append(f"/{component}")
 
-        arch = self.architecture or "?"
+        arch = (self.architecture or "").strip() or "?"
         if color:
-            arch = f"[{self.ARCH_STYLE}]{arch}[/{self.ARCH_STYLE}]"
-        parts.append(f" [{arch}]")
+            arch = escape(arch)
+            if self.ARCH_STYLE:
+                arch = f"[{self.ARCH_STYLE}]{arch}[/{self.ARCH_STYLE}]"
+            parts.append(f" \\[{arch}]")
+        else:
+            parts.append(f" [{arch}]")
         return "".join(parts)
 
     def format_full(self, truncate_origin: bool = True, color: bool = False) -> str:
@@ -159,26 +173,41 @@ class Repository(BaseModel):
         suite = self.suite or "?"
 
         if color:
-            origin = f"[{self.ORIGIN_STYLE}]{origin}[/{self.ORIGIN_STYLE}]"
-            suite = f"[{self.SUITE_STYLE}]{suite}[/{self.SUITE_STYLE}]"
+            # Escape brackets in content
+            origin = escape(origin)
+            suite = escape(suite)
+
+            # Apply styles
+            if self.ORIGIN_STYLE:
+                origin = f"[{self.ORIGIN_STYLE}]{origin}[/{self.ORIGIN_STYLE}]"
+            if self.SUITE_STYLE:
+                suite = f"[{self.SUITE_STYLE}]{suite}[/{self.SUITE_STYLE}]"
 
         parts = [f"{origin}:{suite}"]
 
         if self.component:
             component = self.component
             if color:
-                component = f"[{self.COMP_STYLE}]{component}[/{self.COMP_STYLE}]"
+                component = escape(component)
+                if self.COMP_STYLE:
+                    component = f"[{self.COMP_STYLE}]{component}[/{self.COMP_STYLE}]"
             parts.append(f"/{component}")
 
-        arch = self.architecture or "?"
+        arch = (self.architecture or "").strip() or "?"
         if color:
-            arch = f"[{self.ARCH_STYLE}]{arch}[/{self.ARCH_STYLE}]"
-        parts.append(f" [{arch}]")
+            arch = escape(arch)
+            if self.ARCH_STYLE:
+                arch = f"[{self.ARCH_STYLE}]{arch}[/{self.ARCH_STYLE}]"
+            parts.append(f" \\[{arch}]")
+        else:
+            parts.append(f" [{arch}]")
 
         if self.site:
             site = self.site
-            if color and self.SITE_STYLE:
-                site = f"[{self.SITE_STYLE}]{site}[/{self.SITE_STYLE}]"
+            if color:
+                site = escape(site)
+                if self.SITE_STYLE:
+                    site = f"[{self.SITE_STYLE}]{site}[/{self.SITE_STYLE}]"
             parts.append(f" @{site}")
 
         return "".join(parts)
@@ -201,19 +230,43 @@ class Repository(BaseModel):
         if self.codename:
             codename = self.codename
             if color:
-                codename = f"[{self.CODENAME_STYLE}]{codename}[/{self.CODENAME_STYLE}]"
+                codename = escape(codename)
+                if self.CODENAME_STYLE:
+                    codename = f"[{self.CODENAME_STYLE}]{codename}[/{self.CODENAME_STYLE}]"
             details.append(f"codename={codename}")
 
         if self.label:
             label = self.label
             if color:
-                label = f"[{self.LABEL_STYLE}]{label}[/{self.LABEL_STYLE}]"
+                label = escape(label)
+                if self.LABEL_STYLE:
+                    label = f"[{self.LABEL_STYLE}]{label}[/{self.LABEL_STYLE}]"
             details.append(f"label={label}")
 
         if self.version:
             version = self.version
             if color:
-                version = f"[{self.VER_STYLE}]{version}[/{self.VER_STYLE}]"
+                version = escape(version)
+                if self.VER_STYLE:
+                    version = f"[{self.VER_STYLE}]{version}[/{self.VER_STYLE}]"
             details.append(f"version={version}")
 
         return ", ".join(details)
+
+    def is_dpkg_status(self) -> bool:
+        """
+        Check if this is the dpkg/status pseudo-repository.
+
+        The dpkg/status entry represents currently installed packages, not a real
+        repository. It should be filtered out when generating unattended-upgrades
+        patterns.
+
+        Characteristics of dpkg/status:
+        - suite: "now"
+        - URL: "/var/lib/dpkg/status"
+        - Not a source of updates, just shows installed packages
+
+        Returns:
+            True if this is the dpkg/status pseudo-repository, False otherwise
+        """
+        return self.suite == "now" and "/var/lib/dpkg/status" in self.url

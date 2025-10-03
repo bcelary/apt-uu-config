@@ -15,7 +15,7 @@ from apt_uu_config.apt.uu_config_reader import UUConfigReadError, read_uu_config
 from apt_uu_config.models.repository import Repository
 from apt_uu_config.models.uu_config import UUConfig
 
-console = Console()
+console = Console(highlight=False)
 
 
 class ReposDataDict(TypedDict):
@@ -366,13 +366,13 @@ def patterns(output_format: str, verbose: bool, primary_arch_only: bool, no_trun
             if matched_repos:
                 for repo in matched_repos:
                     # Main identifier line with colored formatting
-                    console.print(f"  • {repo.format_full(color=True)}", highlight=False)
+                    console.print(f"  • {repo.format_full(color=True)}")
 
                     # Verbose: Show additional details
                     if verbose:
                         details = repo.format_details(color=True)
                         if details:
-                            console.print(f"    {details}", highlight=False)
+                            console.print(f"    {details}")
             else:
                 console.print("  [dim](no matches)[/dim]")
             console.print()

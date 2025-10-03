@@ -302,3 +302,49 @@ def test_format_details_partial():
     result = repo.format_details(color=False)
     assert result == "codename=noble, label=Ubuntu"
     assert "version=" not in result
+
+
+def test_is_dpkg_status_true():
+    """Test is_dpkg_status returns True for the dpkg/status pseudo-repository."""
+    repo = Repository(
+        suite="now",
+        priority=100,
+        url="/var/lib/dpkg/status",
+    )
+
+    assert repo.is_dpkg_status() is True
+
+
+def test_is_dpkg_status_false_different_suite():
+    """Test is_dpkg_status returns False when suite is not 'now'."""
+    repo = Repository(
+        origin="Ubuntu",
+        suite="noble-security",
+        priority=500,
+        url="http://security.ubuntu.com/ubuntu noble-security/main amd64 Packages",
+    )
+
+    assert repo.is_dpkg_status() is False
+
+
+def test_is_dpkg_status_false_different_url():
+    """Test is_dpkg_status returns False when URL doesn't contain dpkg/status."""
+    repo = Repository(
+        suite="now",  # Has the right suite
+        priority=500,
+        url="http://example.com/repo now/main amd64 Packages",
+    )
+
+    assert repo.is_dpkg_status() is False
+
+
+def test_is_dpkg_status_false_both_wrong():
+    """Test is_dpkg_status returns False when both suite and URL are different."""
+    repo = Repository(
+        origin="Ubuntu",
+        suite="noble",
+        priority=500,
+        url="http://archive.ubuntu.com/ubuntu noble/main amd64 Packages",
+    )
+
+    assert repo.is_dpkg_status() is False

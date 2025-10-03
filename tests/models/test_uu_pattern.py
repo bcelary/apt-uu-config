@@ -372,3 +372,195 @@ def test_pattern_format_origins_pattern_with_color():
         f"[{UUPattern.PATTERN_STYLE}]origin=Tailscale,site=pkgs.tailscale.com[/{UUPattern.PATTERN_STYLE}]"
         in result
     )
+
+
+# Test variable-based pattern suggestion
+def test_suggest_pattern_variable_based_security():
+    """Test pattern suggestion generates variable-based pattern for distro security repos."""
+    repo = Repository(
+        origin="Ubuntu",
+        suite="noble-security",
+        codename="noble",
+        site="security.ubuntu.com",
+        priority=500,
+        url="http://security.ubuntu.com/ubuntu noble-security/main amd64 Packages",
+    )
+
+    pattern = UUPattern.suggest_for_repository(repo, distro_id="Ubuntu", distro_codename="noble")
+
+    assert pattern.pattern_string == "${distro_id}:${distro_codename}-security"
+    assert pattern.section == "Allowed-Origins"
+
+
+def test_suggest_pattern_variable_based_updates():
+    """Test pattern suggestion generates variable-based pattern for distro updates repos."""
+    repo = Repository(
+        origin="Ubuntu",
+        suite="noble-updates",
+        codename="noble",
+        site="archive.ubuntu.com",
+        priority=500,
+        url="http://archive.ubuntu.com/ubuntu noble-updates/main amd64 Packages",
+    )
+
+    pattern = UUPattern.suggest_for_repository(repo, distro_id="Ubuntu", distro_codename="noble")
+
+    assert pattern.pattern_string == "${distro_id}:${distro_codename}-updates"
+    assert pattern.section == "Allowed-Origins"
+
+
+def test_suggest_pattern_variable_based_backports():
+    """Test pattern suggestion generates variable-based pattern for distro backports repos."""
+    repo = Repository(
+        origin="Ubuntu",
+        suite="noble-backports",
+        codename="noble",
+        site="archive.ubuntu.com",
+        priority=500,
+        url="http://archive.ubuntu.com/ubuntu noble-backports/main amd64 Packages",
+    )
+
+    pattern = UUPattern.suggest_for_repository(repo, distro_id="Ubuntu", distro_codename="noble")
+
+    assert pattern.pattern_string == "${distro_id}:${distro_codename}-backports"
+    assert pattern.section == "Allowed-Origins"
+
+
+def test_suggest_pattern_variable_based_base():
+    """Test pattern suggestion generates variable-based pattern for base distro repos."""
+    repo = Repository(
+        origin="Ubuntu",
+        suite="noble",
+        codename="noble",
+        site="archive.ubuntu.com",
+        priority=500,
+        url="http://archive.ubuntu.com/ubuntu noble/main amd64 Packages",
+    )
+
+    pattern = UUPattern.suggest_for_repository(repo, distro_id="Ubuntu", distro_codename="noble")
+
+    assert pattern.pattern_string == "${distro_id}:${distro_codename}"
+    assert pattern.section == "Allowed-Origins"
+
+
+def test_suggest_pattern_variable_based_case_insensitive():
+    """Test that variable-based patterns work with different case."""
+    repo = Repository(
+        origin="ubuntu",  # lowercase origin
+        suite="noble-security",
+        codename="noble",
+        site="security.ubuntu.com",
+        priority=500,
+        url="http://security.ubuntu.com/ubuntu noble-security/main amd64 Packages",
+    )
+
+    pattern = UUPattern.suggest_for_repository(repo, distro_id="Ubuntu", distro_codename="noble")
+
+    # Should still match and generate variable pattern
+    assert pattern.pattern_string == "${distro_id}:${distro_codename}-security"
+    assert pattern.section == "Allowed-Origins"
+
+
+def test_suggest_pattern_non_distro_repo_no_variables():
+    """Test that non-distribution repos don't get variable-based patterns."""
+    repo = Repository(
+        origin="Brave Software",
+        suite="stable",
+        codename="stable",
+        site="brave-browser-apt-release.s3.brave.com",
+        priority=500,
+        url="https://brave-browser-apt-release.s3.brave.com/ stable/main amd64 Packages",
+    )
+
+    pattern = UUPattern.suggest_for_repository(repo, distro_id="Ubuntu", distro_codename="noble")
+
+    # Should use hardcoded pattern, not variables
+    assert pattern.pattern_string == "Brave Software:stable"
+    assert pattern.section == "Allowed-Origins"
+
+
+def test_suggest_pattern_no_distro_info_fallback():
+    """Test that pattern suggestion falls back without distro_id/codename."""
+    repo = Repository(
+        origin="Ubuntu",
+        suite="noble-security",
+        codename="noble",
+        site="security.ubuntu.com",
+        priority=500,
+        url="http://security.ubuntu.com/ubuntu noble-security/main amd64 Packages",
+    )
+
+    # Don't provide distro_id/codename
+    pattern = UUPattern.suggest_for_repository(repo)
+
+    # Should fall back to hardcoded pattern
+    assert pattern.pattern_string == "Ubuntu:noble-security"
+    assert pattern.section == "Allowed-Origins"
+
+
+def test_suggest_pattern_debian_variable_based():
+    """Test variable-based pattern generation for Debian repos."""
+    repo = Repository(
+        origin="Debian",
+        suite="bookworm-security",
+        codename="bookworm",
+        site="security.debian.org",
+        priority=500,
+        url="http://security.debian.org/debian-security bookworm-security/main amd64 Packages",
+    )
+
+    pattern = UUPattern.suggest_for_repository(repo, distro_id="Debian", distro_codename="bookworm")
+
+    assert pattern.pattern_string == "${distro_id}:${distro_codename}-security"
+    assert pattern.section == "Allowed-Origins"
+
+
+def test_suggest_pattern_ubuntu_esm_apps():
+    """Test variable-based pattern generation for Ubuntu ESM Apps repos."""
+    repo = Repository(
+        origin="UbuntuESMApps",
+        suite="noble-apps-security",
+        codename="noble",
+        site="esm.ubuntu.com",
+        priority=500,
+        url="https://esm.ubuntu.com/apps/ubuntu noble-apps-security/main amd64 Packages",
+    )
+
+    pattern = UUPattern.suggest_for_repository(repo, distro_id="Ubuntu", distro_codename="noble")
+
+    assert pattern.pattern_string == "${distro_id}ESMApps:${distro_codename}-apps-security"
+    assert pattern.section == "Allowed-Origins"
+
+
+def test_suggest_pattern_ubuntu_esm_infra():
+    """Test variable-based pattern generation for Ubuntu ESM Infrastructure repos."""
+    repo = Repository(
+        origin="UbuntuESM",
+        suite="noble-infra-security",
+        codename="noble",
+        site="esm.ubuntu.com",
+        priority=500,
+        url="https://esm.ubuntu.com/infra/ubuntu noble-infra-security/main amd64 Packages",
+    )
+
+    pattern = UUPattern.suggest_for_repository(repo, distro_id="Ubuntu", distro_codename="noble")
+
+    assert pattern.pattern_string == "${distro_id}ESM:${distro_codename}-infra-security"
+    assert pattern.section == "Allowed-Origins"
+
+
+def test_suggest_pattern_codename_in_middle_of_suite():
+    """Test that codename can be matched anywhere in the suite."""
+    repo = Repository(
+        origin="Ubuntu",
+        suite="proposed-noble-testing",
+        codename="noble",
+        site="archive.ubuntu.com",
+        priority=500,
+        url="http://archive.ubuntu.com/ubuntu proposed-noble-testing/main amd64 Packages",
+    )
+
+    pattern = UUPattern.suggest_for_repository(repo, distro_id="Ubuntu", distro_codename="noble")
+
+    assert pattern.pattern_string == "${distro_id}:proposed-${distro_codename}-testing"
+    assert pattern.section == "Allowed-Origins"
