@@ -12,7 +12,8 @@ from apt_uu_config.apt.policy_parser import PolicyParseError, parse_apt_policy
 from apt_uu_config.models.repository import Repository
 from apt_uu_config.models.uu_pattern import UUPattern
 
-console = Console(highlight=False)
+console = Console(highlight=False, soft_wrap=True)
+console_error = Console(highlight=False, stderr=True, soft_wrap=True)
 
 
 def _handle_errors(func: Callable[..., Any]) -> Callable[..., Any]:
@@ -62,7 +63,7 @@ def config(verbose: bool) -> None:
     real_repos = [repo for repo in repositories if not repo.is_dpkg_status()]
 
     if not real_repos:
-        console.print("[yellow]No repositories found.[/yellow]")
+        console_error.print("No repositories found.", style="yellow")
         return
 
     # Generate suggested patterns and group repositories by pattern
@@ -88,7 +89,7 @@ def config(verbose: bool) -> None:
 
     # Display results
     console.print(
-        f"\n[bold]Suggested unattended-upgrades patterns for {distro_id} {distro_codename}:[/bold]\n"
+        f"\n# [bold]Suggested unattended-upgrades patterns for all detected repositories on {distro_id}:{distro_codename}[/bold]\n"
     )
 
     # Show Allowed-Origins section

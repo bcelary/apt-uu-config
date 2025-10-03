@@ -81,7 +81,10 @@ def test_config_command_basic(mock_system_data):
     result = runner.invoke(config)
 
     assert result.exit_code == 0
-    assert "Suggested unattended-upgrades patterns for Ubuntu noble" in result.output
+    assert (
+        "# Suggested unattended-upgrades patterns for all detected repositories on Ubuntu:noble"
+        in result.output
+    )
 
 
 def test_config_filters_dpkg_status(mock_system_data):
@@ -270,8 +273,11 @@ def test_config_without_verbose_no_repo_details(mock_system_data):
     assert result.exit_code == 0
     # Should show patterns
     assert "${distro_id}:${distro_codename}-security" in result.output
-    # Should NOT show repository details (no comment lines)
-    assert "# " not in result.output
+    # Should NOT show repository details (no repository-specific comments)
+    # The header comment is fine, but no site/repo details
+    assert "security.ubuntu.com" not in result.output
+    assert "archive.ubuntu.com" not in result.output
+    assert "brave-browser-apt-release.s3.brave.com" not in result.output
 
 
 def test_config_verbose_spacing():
