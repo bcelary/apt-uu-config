@@ -16,24 +16,7 @@ Requires Python 3.12+ and Debian/Ubuntu based system. We recommend using [uv](ht
 ```sh
 # Install system dependencies
 sudo apt install python3-apt lsb-release
-```
 
-### Option 1: Install as a uv tool (recommended)
-
-```sh
-# Install directly from the repository
-uv tool install --python-preference system git+https://github.com/bcelary/apt-uu-config.git
-
-# Run
-apt-uu-config <command>
-
-# If you get permission errors, use sudo
-sudo apt-uu-config <command>
-```
-
-### Option 2: Clone and run from source
-
-```sh
 # Clone and install
 git clone https://github.com/bcelary/apt-uu-config.git
 cd apt-uu-config
@@ -52,6 +35,8 @@ sudo apt-uu-config <command>
 # Deactivate when done
 deactivate
 ```
+
+> **Why not `uv tool install`?** This tool depends on `python3-apt`, which is only available as a system package (not on PyPI). The `uv tool install` command creates isolated environments without access to system packages. If you want a global installation, `pipx install --system-site-packages` may work, but this is currently unverified.
 
 ## Usage
 
