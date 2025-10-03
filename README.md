@@ -45,6 +45,17 @@ sudo apt-uu-config show patterns
 sudo apt-uu-config show patterns --verbose       # Show detailed matches
 ```
 
+### Generate Configuration
+
+Generate suggested unattended-upgrades patterns for your system:
+
+```bash
+apt-uu-config config                             # Show suggested patterns
+apt-uu-config config --verbose                   # Show repository details as comments
+```
+
+This analyzes all configured repositories and suggests appropriate patterns for `/etc/apt/apt.conf.d/50unattended-upgrades`. The output can be copied directly into your configuration file.
+
 ### Common Options
 
 - `--format [text|json]` - Output format (default: text)
