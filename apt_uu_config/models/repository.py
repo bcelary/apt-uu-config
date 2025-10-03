@@ -72,7 +72,7 @@ class Repository(BaseModel):
     )
 
     def __str__(self) -> str:
-        """Human-readable string representation."""
+        """Human-readable string representation for logging/debugging."""
         origin = self.origin or "Unknown"
         suite = self.suite or "Unknown"
         return f"{origin}:{suite}"
@@ -80,3 +80,120 @@ class Repository(BaseModel):
     def __repr__(self) -> str:
         """Developer-friendly representation."""
         return f"Repository(origin={self.origin!r}, suite={self.suite!r}, site={self.site!r})"
+
+    def format_compact(self, truncate_origin: bool = True, color: bool = False) -> str:
+        """
+        Format repository with essential identifying information.
+
+        Args:
+            truncate_origin: If True, truncate long origins (>30 chars) intelligently
+            color: If True, apply Rich markup for colored output
+
+        Returns format: origin:suite/component [arch]
+        - Architecture always shown (uses ? if not specified)
+        Example: "Ubuntu:noble-security/main [amd64]"
+        Example (long origin): "obs://build.ope...Ubuntu_24.04:?/main [amd64]"
+        Example (no arch): "Ubuntu:noble [?]"
+        """
+        origin = self.origin or "?"
+
+        # Smart truncation for long origins (like obs:// URLs)
+        if truncate_origin and len(origin) > 30:
+            # Keep first 15 and last 12 chars with ... in middle
+            origin = f"{origin[:15]}...{origin[-12:]}"
+
+        suite = self.suite or "?"
+
+        if color:
+            origin = f"[cyan]{origin}[/cyan]"
+            suite = f"[blue]{suite}[/blue]"
+
+        parts = [f"{origin}:{suite}"]
+
+        if self.component:
+            component = self.component
+            if color:
+                component = f"[yellow]{component}[/yellow]"
+            parts.append(f"/{component}")
+
+        arch = self.architecture or "?"
+        if color:
+            arch = f"[white]{arch}[/white]"
+        parts.append(f" [{arch}]")
+        return "".join(parts)
+
+    def format_full(self, truncate_origin: bool = True, color: bool = False) -> str:
+        """
+        Format repository with full identifying information and smart truncation.
+
+        Args:
+            truncate_origin: If True, truncate long origins (>30 chars) intelligently
+            color: If True, apply Rich markup for colored output
+
+        Returns format: origin:suite/component [arch] @site
+        - Architecture always shown (uses ? if not specified)
+        - Site shown only when different from origin
+        Example: "Ubuntu:noble-security/main [amd64]"
+        Example (long origin): "obs://build.op...Ubuntu_24.04:?/main [amd64] @download.opensuse.org"
+        Example (no arch): "Ubuntu:noble [?] @archive.ubuntu.com"
+        """
+        origin = self.origin or "?"
+
+        # Smart truncation for long origins (like obs:// URLs)
+        if truncate_origin and len(origin) > 30:
+            # Keep first 15 and last 12 chars with ... in middle
+            origin = f"{origin[:15]}...{origin[-12:]}"
+
+        suite = self.suite or "?"
+
+        if color:
+            origin = f"[cyan]{origin}[/cyan]"
+            suite = f"[blue]{suite}[/blue]"
+
+        parts = [f"{origin}:{suite}"]
+
+        if self.component:
+            component = self.component
+            if color:
+                component = f"[yellow]{component}[/yellow]"
+            parts.append(f"/{component}")
+
+        arch = self.architecture or "?"
+        if color:
+            arch = f"[white]{arch}[/white]"
+        parts.append(f" [{arch}]")
+
+        if self.site and self.site != self.origin:
+            # Add site if it's different from origin (often more recognizable)
+            parts.append(f" @{self.site}")
+
+        return "".join(parts)
+
+    def format_details(self, color: bool = False) -> str:
+        """
+        Format additional repository metadata not shown in compact/full format.
+
+        Args:
+            color: If True, apply Rich markup for colored output
+
+        Returns format: codename=X, label=Y, version=Z
+        - Only includes fields that have values
+        - Returns empty string if no additional details available
+        Example: "codename=noble, label=Ubuntu, version=24.04"
+        Example: "codename=stable, label=Brave"
+        """
+        details = []
+
+        if self.codename:
+            codename = self.codename
+            if color:
+                codename = f"[magenta]{codename}[/magenta]"
+            details.append(f"codename={codename}")
+
+        if self.label:
+            details.append(f"label={self.label}")
+
+        if self.version:
+            details.append(f"version={self.version}")
+
+        return ", ".join(details)
