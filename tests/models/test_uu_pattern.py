@@ -337,3 +337,38 @@ def test_pattern_repr():
         repr(pattern)
         == "UUPattern(pattern_string='origin=Tailscale,site=pkgs.tailscale.com', section='Origins-Pattern')"
     )
+
+
+# Test format method
+def test_pattern_format_without_color():
+    """Test format method without color markup."""
+    pattern = UUPattern(pattern_string="Ubuntu:noble-security", section="Allowed-Origins")
+
+    assert pattern.format(color=False) == "Allowed-Origins: Ubuntu:noble-security"
+
+
+def test_pattern_format_with_color():
+    """Test format method with color markup."""
+    pattern = UUPattern(pattern_string="Ubuntu:noble-security", section="Allowed-Origins")
+
+    result = pattern.format(color=True)
+    # Check that color tags are present using class constants
+    assert f"[{UUPattern.SECTION_STYLE}]Allowed-Origins[/{UUPattern.SECTION_STYLE}]" in result
+    assert f"[{UUPattern.PATTERN_STYLE}]Ubuntu:noble-security[/{UUPattern.PATTERN_STYLE}]" in result
+    assert ": " in result
+
+
+def test_pattern_format_origins_pattern_with_color():
+    """Test format method for Origins-Pattern section with color."""
+    pattern = UUPattern(
+        pattern_string="origin=Tailscale,site=pkgs.tailscale.com",
+        section="Origins-Pattern",
+    )
+
+    result = pattern.format(color=True)
+    # Check that color tags are present using class constants
+    assert f"[{UUPattern.SECTION_STYLE}]Origins-Pattern[/{UUPattern.SECTION_STYLE}]" in result
+    assert (
+        f"[{UUPattern.PATTERN_STYLE}]origin=Tailscale,site=pkgs.tailscale.com[/{UUPattern.PATTERN_STYLE}]"
+        in result
+    )

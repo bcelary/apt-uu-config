@@ -242,3 +242,63 @@ def test_format_full_no_site():
     )
 
     assert repo.format_full() == "Ubuntu:noble/main [amd64]"
+
+
+def test_format_details_without_color():
+    """Test format_details without color markup."""
+    repo = Repository(
+        codename="noble",
+        label="Ubuntu",
+        version="24.04",
+        priority=500,
+        url="http://archive.ubuntu.com/ubuntu noble/main amd64 Packages",
+    )
+
+    assert repo.format_details(color=False) == "codename=noble, label=Ubuntu, version=24.04"
+
+
+def test_format_details_with_color():
+    """Test format_details with color markup."""
+    repo = Repository(
+        codename="noble",
+        label="Ubuntu",
+        version="24.04",
+        priority=500,
+        url="http://archive.ubuntu.com/ubuntu noble/main amd64 Packages",
+    )
+
+    result = repo.format_details(color=True)
+    # Check that color tags are present using class constants
+    assert f"[{Repository.CODENAME_STYLE}]noble[/{Repository.CODENAME_STYLE}]" in result
+    assert f"[{Repository.LABEL_STYLE}]Ubuntu[/{Repository.LABEL_STYLE}]" in result
+    assert f"[{Repository.VER_STYLE}]24.04[/{Repository.VER_STYLE}]" in result
+    assert "codename=" in result
+    assert "label=" in result
+    assert "version=" in result
+
+
+def test_format_details_empty():
+    """Test format_details when no details are available."""
+    repo = Repository(
+        origin="Ubuntu",
+        suite="noble",
+        priority=500,
+        url="http://archive.ubuntu.com/ubuntu noble/main amd64 Packages",
+    )
+
+    assert repo.format_details(color=False) == ""
+    assert repo.format_details(color=True) == ""
+
+
+def test_format_details_partial():
+    """Test format_details with only some fields present."""
+    repo = Repository(
+        codename="noble",
+        label="Ubuntu",
+        priority=500,
+        url="http://archive.ubuntu.com/ubuntu noble/main amd64 Packages",
+    )
+
+    result = repo.format_details(color=False)
+    assert result == "codename=noble, label=Ubuntu"
+    assert "version=" not in result

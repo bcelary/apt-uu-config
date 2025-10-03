@@ -5,7 +5,7 @@ repositories should receive automatic updates.
 """
 
 import re
-from typing import Literal, Optional
+from typing import ClassVar, Literal, Optional
 
 from pydantic import BaseModel, Field
 
@@ -27,6 +27,10 @@ class UUPattern(BaseModel):
     2. Origins-Pattern: Multi-field "key=value,key=value" format
        Example: "origin=Tailscale,site=pkgs.tailscale.com"
     """
+
+    # Color/style constants for presentation
+    SECTION_STYLE: ClassVar[str] = "dim bold white"
+    PATTERN_STYLE: ClassVar[str] = "bold white"
 
     pattern_string: str = Field(
         description="The pattern as it appears in UU config. "
@@ -249,6 +253,25 @@ class UUPattern(BaseModel):
             pattern_string=f"origin={repo.origin},suite={repo.suite}",
             section="Origins-Pattern",
         )
+
+    def format(self, color: bool = False) -> str:
+        """
+        Format pattern for display.
+
+        Args:
+            color: If True, apply Rich markup for colored output
+
+        Returns:
+            Formatted pattern string like "Section: pattern"
+        """
+        section_str: str = self.section
+        pattern_str: str = self.pattern_string
+
+        if color:
+            section_str = f"[{self.SECTION_STYLE}]{section_str}[/{self.SECTION_STYLE}]"
+            pattern_str = f"[{self.PATTERN_STYLE}]{pattern_str}[/{self.PATTERN_STYLE}]"
+
+        return f"{section_str}: {pattern_str}"
 
     def __str__(self) -> str:
         """Human-readable string representation."""

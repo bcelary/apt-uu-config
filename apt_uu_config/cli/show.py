@@ -226,28 +226,54 @@ def repos(
         # Build table
         table = Table(title="Repositories")
         table.add_column(
-            "Origin", style="cyan", max_width=15, **_get_column_overflow_kwargs(no_truncate)
+            "Origin",
+            style=Repository.ORIGIN_STYLE,
+            max_width=15,
+            **_get_column_overflow_kwargs(no_truncate),
         )
-        table.add_column("Suite", style="blue", **_get_column_overflow_kwargs(no_truncate))
         table.add_column(
-            "Site", style="white", max_width=22, **_get_column_overflow_kwargs(no_truncate)
+            "Suite", style=Repository.SUITE_STYLE, **_get_column_overflow_kwargs(no_truncate)
         )
-        table.add_column("Component", style="yellow", **_get_column_overflow_kwargs(no_truncate))
-        table.add_column("Codename", style="magenta", **_get_column_overflow_kwargs(no_truncate))
         table.add_column(
-            "Arch", style="white", min_width=5, **_get_column_overflow_kwargs(no_truncate)
+            "Site",
+            style=Repository.SITE_STYLE,
+            max_width=22,
+            **_get_column_overflow_kwargs(no_truncate),
+        )
+        table.add_column(
+            "Component", style=Repository.COMP_STYLE, **_get_column_overflow_kwargs(no_truncate)
+        )
+        table.add_column(
+            "Codename", style=Repository.CODENAME_STYLE, **_get_column_overflow_kwargs(no_truncate)
+        )
+        table.add_column(
+            "Arch",
+            style=Repository.ARCH_STYLE,
+            min_width=5,
+            **_get_column_overflow_kwargs(no_truncate),
         )
 
         if verbose:
             table.add_column(
-                "Label", style="white", max_width=15, **_get_column_overflow_kwargs(no_truncate)
+                "Label",
+                style=Repository.LABEL_STYLE,
+                max_width=15,
+                **_get_column_overflow_kwargs(no_truncate),
             )
-            table.add_column("Version", style="white", **_get_column_overflow_kwargs(no_truncate))
             table.add_column(
-                "Priority", style="white", min_width=3, **_get_column_overflow_kwargs(no_truncate)
+                "Version", style=Repository.VER_STYLE, **_get_column_overflow_kwargs(no_truncate)
             )
             table.add_column(
-                "URL", style="dim", max_width=25, **_get_column_overflow_kwargs(no_truncate)
+                "Priority",
+                style=Repository.PRIO_STYLE,
+                min_width=3,
+                **_get_column_overflow_kwargs(no_truncate),
+            )
+            table.add_column(
+                "URL",
+                style=Repository.URL_STYLE,
+                max_width=25,
+                **_get_column_overflow_kwargs(no_truncate),
             )
             table.add_column(
                 "UU Pattern Match", max_width=40, **_get_column_overflow_kwargs(no_truncate)
@@ -336,9 +362,7 @@ def patterns(output_format: str, verbose: bool, primary_arch_only: bool, no_trun
     else:
         # Show pattern listing
         for pattern, matched_repos in pattern_matches:
-            console.print(
-                f"[cyan]{pattern.section}:[/cyan] [yellow]{pattern.pattern_string}[/yellow]"
-            )
+            console.print(pattern.format(color=True))
             if matched_repos:
                 for repo in matched_repos:
                     # Main identifier line with colored formatting

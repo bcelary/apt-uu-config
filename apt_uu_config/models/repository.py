@@ -4,7 +4,7 @@ This module contains the pure data model for APT repositories as they exist
 on the system. It contains no business logic about unattended-upgrades.
 """
 
-from typing import Optional
+from typing import ClassVar, Optional
 
 from pydantic import BaseModel, Field
 
@@ -28,6 +28,18 @@ class Repository(BaseModel):
         500 http://archive.ubuntu.com/ubuntu noble/main amd64 Packages
             release v=24.04,o=Ubuntu,a=noble,n=noble,l=Ubuntu,c=main,b=amd64
     """
+
+    # Color/style constants for presentation
+    ORIGIN_STYLE: ClassVar[str] = "cyan"
+    SUITE_STYLE: ClassVar[str] = "blue"
+    COMP_STYLE: ClassVar[str] = "yellow"
+    ARCH_STYLE: ClassVar[str] = "white on bright_black"
+    SITE_STYLE: ClassVar[str] = "dim white on black"
+    CODENAME_STYLE: ClassVar[str] = "magenta"
+    LABEL_STYLE: ClassVar[str] = "white on bright_black"
+    VER_STYLE: ClassVar[str] = "white on bright_black"
+    PRIO_STYLE: ClassVar[str] = "white on bright_black"
+    URL_STYLE: ClassVar[str] = "dim white on bright_black"
 
     # Core metadata fields (from Release file)
     origin: Optional[str] = Field(
@@ -105,20 +117,20 @@ class Repository(BaseModel):
         suite = self.suite or "?"
 
         if color:
-            origin = f"[cyan]{origin}[/cyan]"
-            suite = f"[blue]{suite}[/blue]"
+            origin = f"[{self.ORIGIN_STYLE}]{origin}[/{self.ORIGIN_STYLE}]"
+            suite = f"[{self.SUITE_STYLE}]{suite}[/{self.SUITE_STYLE}]"
 
         parts = [f"{origin}:{suite}"]
 
         if self.component:
             component = self.component
             if color:
-                component = f"[yellow]{component}[/yellow]"
+                component = f"[{self.COMP_STYLE}]{component}[/{self.COMP_STYLE}]"
             parts.append(f"/{component}")
 
         arch = self.architecture or "?"
         if color:
-            arch = f"[white]{arch}[/white]"
+            arch = f"[{self.ARCH_STYLE}]{arch}[/{self.ARCH_STYLE}]"
         parts.append(f" [{arch}]")
         return "".join(parts)
 
@@ -147,24 +159,27 @@ class Repository(BaseModel):
         suite = self.suite or "?"
 
         if color:
-            origin = f"[cyan]{origin}[/cyan]"
-            suite = f"[blue]{suite}[/blue]"
+            origin = f"[{self.ORIGIN_STYLE}]{origin}[/{self.ORIGIN_STYLE}]"
+            suite = f"[{self.SUITE_STYLE}]{suite}[/{self.SUITE_STYLE}]"
 
         parts = [f"{origin}:{suite}"]
 
         if self.component:
             component = self.component
             if color:
-                component = f"[yellow]{component}[/yellow]"
+                component = f"[{self.COMP_STYLE}]{component}[/{self.COMP_STYLE}]"
             parts.append(f"/{component}")
 
         arch = self.architecture or "?"
         if color:
-            arch = f"[white]{arch}[/white]"
+            arch = f"[{self.ARCH_STYLE}]{arch}[/{self.ARCH_STYLE}]"
         parts.append(f" [{arch}]")
 
         if self.site:
-            parts.append(f" @{self.site}")
+            site = self.site
+            if color and self.SITE_STYLE:
+                site = f"[{self.SITE_STYLE}]{site}[/{self.SITE_STYLE}]"
+            parts.append(f" @{site}")
 
         return "".join(parts)
 
@@ -186,19 +201,19 @@ class Repository(BaseModel):
         if self.codename:
             codename = self.codename
             if color:
-                codename = f"[magenta]{codename}[/magenta]"
+                codename = f"[{self.CODENAME_STYLE}]{codename}[/{self.CODENAME_STYLE}]"
             details.append(f"codename={codename}")
 
         if self.label:
             label = self.label
             if color:
-                label = f"[white]{label}[/white]"
+                label = f"[{self.LABEL_STYLE}]{label}[/{self.LABEL_STYLE}]"
             details.append(f"label={label}")
 
         if self.version:
             version = self.version
             if color:
-                version = f"[white]{version}[/white]"
+                version = f"[{self.VER_STYLE}]{version}[/{self.VER_STYLE}]"
             details.append(f"version={version}")
 
         return ", ".join(details)
