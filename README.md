@@ -11,7 +11,24 @@ Perfect for auditing your automatic update configuration or quickly generating a
 
 ## Installation
 
-Requires Python 3.12+ and Debian/Ubuntu based system. We recommend using [uv](https://docs.astral.sh/uv/) for package management.
+Requires Python 3.12+ and Debian/Ubuntu based system.
+
+### Using pipx (Recommended)
+
+```sh
+# Install pipx and system dependencies (pipx available in universe repository)
+sudo apt install pipx python3-apt lsb-release
+
+# Install apt-uu-config
+pipx install --system-site-packages git+https://github.com/bcelary/apt-uu-config
+
+# Run from anywhere (if you get permission errors, use sudo)
+apt-uu-config <command>
+```
+
+### Using uv (For development)
+
+For development work, use [uv](https://docs.astral.sh/uv/) for package management.
 
 ```sh
 # Install system dependencies
@@ -26,17 +43,14 @@ uv sync
 # Activate virtual environment
 source .venv/bin/activate
 
-# Run from anywhere
+# Run from anywhere (if you get permission errors, use sudo)
 apt-uu-config <command>
-
-# If you get permission errors, use sudo
-sudo apt-uu-config <command>
 
 # Deactivate when done
 deactivate
 ```
 
-> **Why not `uv tool install`?** This tool depends on `python3-apt`, which is only available as a system package (not on PyPI). The `uv tool install` command creates isolated environments without access to system packages. If you want a global installation, `pipx install --system-site-packages` may work, but this is currently unverified.
+> **Why not `uv tool install`?** This tool depends on `python3-apt`, which is only available as a system package (not on PyPI). The `uv tool install` command creates isolated environments without access to system packages.
 
 ## Usage
 
